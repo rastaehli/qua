@@ -1,0 +1,26 @@
+{
+    "type": "gitlabBuildAutomation",
+    "build:parents": [ "build:visibility" ],
+    "properties": {
+        "branchModel": "visibility-1.0",
+        "libraries": [ "contracts", "identity" ],
+        "webapp_deployments": [
+            {
+                "env": "QA",
+                "server": "depot01-qa"
+            },
+            {
+                "env": "QA",
+                "server": "depot02-qa"
+            },
+            {
+                "env": "PROD",
+                "server": "depot01-prod"
+            },
+            {
+                "env": "PROD",
+                "server": "depot02-prod"
+            }
+        ]
+    }
+}

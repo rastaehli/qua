@@ -1,0 +1,87 @@
+{
+    "schemaVersion": "0.1",
+    "build:parents": [ "build:visibility" ],
+
+    "artifacts": [
+        {
+            "name": "package",
+            "build:type": "build:maven/package_webapp",
+            "dependencies": [
+                { "key": "configured", "build:findArtifact": { "name": "configured" } }
+            ]
+        },
+
+        {
+            "name": "config",
+            "build:type": "build:config",
+            "dependencies": [
+                { "key": "compiled", "build:findArtifact": { "name": "compiled", "branchType": "develop" } },
+                {
+                    "build:type": "build:filecopy",
+                    "fromDir": "${qaConfigDir}",
+                    "fileName": "logback.xml",
+                    "toDir": "${resourcesDir}"
+                },
+                {
+                    "build:type": "build:filecopy",
+                    "fromDir": "${qaConfigDir}",
+                    "fileName": "client_messaging.xml",
+                    "toDir": "${resourcesDir}"
+                },
+                {
+                    "build:type": "fileEdit",
+                    "fromDir": "${qaConfigDir}",
+                    "fileName": "logback.xml",
+                    "replacments": [
+                        { "key": "#{dummy}", "value": "newValue" },
+                        { "key": "#{dummy}", "value": "newValue" }
+                    ]
+                }
+            ]
+        },
+        {
+            "build:type": "build:maven/deploy",
+            "targetServer": "exposerv01-qa.chq.ei"
+        },
+        {
+            "name": "qa1",
+            "build:parents": [ "qa" ],
+            "build:deploymentServer": "exposerv01-qa.chq.ei"
+        },
+        {
+            "name": "prod",
+            "fileCopies": [
+                {
+                    "fromDir": "${prodConfigDir}",
+                    "fileName": "logback.xml",
+                    "toDir": "${resourcesDir}"
+                },
+                {
+                    "fromDir": "${prodConfigDir}",
+                    "fileName": "persistance.xml",
+                    "toDir": "${resourcesDir}/META-INF"
+                },
+                {
+                    "fromDir": "${prodConfigDir}",
+                    "fileName": "client_messaging.xml",
+                    "toDir": "${resourcesDir}"
+                }
+            ]
+        },
+        {
+            "name": "prod3",
+            "build:parents": [ "prod" ],
+            "build:deploymentServer": "exposerv03.chq.ei"
+        },
+        {
+            "name": "prod4",
+            "build:parents": [ "prod" ],
+            "build:deploymentServer": "exposerv04.chq.ei"
+        },
+        {
+            "name": "prod5",
+            "build:parents": [ "prod" ],
+            "build:deploymentServer": "exposerv05.chq.ei"
+        }
+    ]
+}

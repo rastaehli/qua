@@ -1,0 +1,6 @@
+{
+    "type": "gitlabBuildAutomation",
+    "plan": {
+        "builder": { "type": "build:gitlabPipelineGenerator" }
+    }
+}

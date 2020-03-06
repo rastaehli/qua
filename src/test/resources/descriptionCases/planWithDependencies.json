@@ -1,0 +1,10 @@
+{
+    "type": "gitlabBuildAutomation",
+    "plan": {
+        "builder":  { "type": "build:gitlabPipelineGenerator" },
+        "dependencies": {
+            "first": "value",
+            "second": { "type": "unknown"}
+        }
+    }
+}

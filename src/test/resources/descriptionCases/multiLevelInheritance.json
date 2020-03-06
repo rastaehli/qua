@@ -1,0 +1,7 @@
+{
+  "parent":  "extendedProperties",
+  "properties": {
+    "newProperty1": "value99",
+    "newProperty2": "value2"
+  }
+}

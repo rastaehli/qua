@@ -1,0 +1,221 @@
+{
+    "schemaVersion": "0.1",
+    "namespaceAliases": [
+        {
+            "alias": "build",
+            "namespace": "http://com.expd.model/v0/build/"
+        },
+        {
+            "alias": "gitlab",
+            "namespace": "http://com.expd.model/v0/build/gitlab/"
+        }
+    ],
+    "build:parents": [
+    ],
+    "variables": [
+        {
+            "key": "gitlab_runner_account",
+            "value": "push_account"
+        },
+        {
+            "key": "gitlab_runner_auth_token",
+            "value": "push_token"
+        },
+        {
+            "key": "projectDir",
+            "value": ""
+        },
+        {
+            "key": "configDir",
+            "value": "${projectDir}/config"
+        },
+        {
+            "key": "resourcesDir",
+            "value": "${projectDir}/src/main/resources"
+        }
+    ],
+    "properties": {
+        "branchModel": "visibility-1.0",
+        "artifacts": [
+            {
+                "name": "classes",
+                "build:type": "maven:compile"
+            },
+            {
+                "name": "unit-test-report",
+                "build:type": "maven:verify",
+                "properties": {
+                    "dependency": "classes"
+                }
+            },
+            {
+                "name": "integration-test-report",
+                "build:type": "maven:test",
+                "properties": {
+                    "dependency": "maven-artifacts"
+                }
+            },
+            {
+                "name": "maven-artifacts",
+                "build:type": "maven:install",
+                "properties": {
+                    "dependency": "unit-test-report(passed)"
+                }
+            },
+            {
+                "name": "contracts-nexus-snapshot",
+                "build:type": "maven:deploy",
+                "properties": {
+                    "dependency": "maven-artifacts(snapshot)"
+                }
+            },
+            {
+                "name": "contracts-nexus-release",
+                "build:type": "maven:deploy",
+                "properties": {
+                    "dependency": "maven-artifacts(versioned)"
+                }
+            },
+            {
+                "name": "identity-nexus-snapshot",
+                "build:type": "maven:deploy",
+                "properties": {
+                    "dependency": "maven-artifacts(snapshot)"
+                }
+            },
+            {
+                "name": "identity-nexus-release",
+                "build:type": "maven:deploy",
+                "properties": {
+                    "dependency": "maven-artifacts(versioned)"
+                }
+            },
+            {
+                "name": "patch-increment",
+                "build:type": "build:version-increment",
+                "properties": {
+                    "type": "patch"
+                }
+            },
+            {
+                "name": "minor-increment",
+                "build:type": "build:version-increment",
+                "properties": {
+                    "type": "minor"
+                }
+            },
+            {
+                "name": "major-increment",
+                "build:type": "build:version-increment",
+                "properties": {
+                    "type": "major"
+                }
+            },
+            {
+                "name": "release",
+                "build:type": "build:release"
+            },
+            {
+                "name": "deploy-qa1",
+                "build:type": "build:deploy-webapp",
+                "properties": {
+                    "env": "QA",
+                    "server": "depot01-qa"
+                }
+            },
+            {
+                "name": "deploy-qa2",
+                "build:type": "build:deploy-webapp",
+                "properties": {
+                    "env": "QA",
+                    "server": "depot02-qa"
+                }
+            },
+            {
+                "name": "deploy-prod1",
+                "build:type": "build:deploy-webapp",
+                "properties": {
+                    "env": "PROD",
+                    "server": "depot01-prod"
+                }
+            },
+            {
+                "name": "deploy-prod2",
+                "build:type": "build:deploy-webapp",
+                "properties": {
+                    "env": "PROD",
+                    "server": "depot02-prod"
+                }
+            }
+        ]
+    },
+    "artifacts": [
+        {
+            "name": "checkedOut",
+            "build:type": "gitlab:checkout",
+            "dependencies": [
+                { "key": "branchChanged", "build:findArtifact": { "build:type":  "gitlab:branchChanged" } },
+                { "key": "branchType", "value": "${branchChanged.branchType}" }
+            ]
+        },
+        {
+            "name": "increment_patch",
+            "build:type": "build:maven/increment_version",
+            "increment_type": "patch",
+            "dependencies": [
+                { "key": "tested", "build:findArtifact": { "name": "tested", "branchType": "qa" } }
+            ]
+        },
+        {
+            "name": "increment_minor",
+            "build:type": "build:maven/increment_version",
+            "increment_type": "minor",
+            "dependencies": [
+                { "key": "tested", "build:findArtifact": { "name": "tested", "branchType": "qa" } }
+            ]
+        },
+        {
+            "name": "increment_major",
+            "build:type": "build:maven/increment_version",
+            "increment_type": "major",
+            "dependencies": [
+                { "key": "tested", "build:findArtifact": { "name": "tested", "branchType": "qa" } }
+            ]
+        },
+        {
+            "name": "released",
+            "build:type": "build:release_branch",
+            "dependencies": [
+                { "key": "tested", "build:findArtifact": { "name": "tested", "branchType": "qa" } }
+            ]
+        },
+        {
+            "name": "static_checked",
+            "build:type": "build:maven/validate",
+            "dependencies": [
+                { "key": "checkedOut", "build:findArtifact": { "name": "checkedOut" } }
+            ]
+        },
+        {
+            "name": "compiled",
+            "build:type": "build:maven/compile",
+            "dependencies": [
+                { "key": "static_checked", "build:findArtifact": { "name": "static_checked" } }
+            ]
+        },
+        {
+            "name": "tested",
+            "build:type": "build:maven/test",
+            "dependencies": [
+                { "key": "compiled", "build:findArtifact": { "name": "compiled" } }
+            ]
+        },
+        {
+            "name": "package",
+            "build:type": "build:maven/package_webapp",
+            "dependencies": [
+                { "key": "compiled", "build:findArtifact": { "name": "compiled", "branchType": "develop" } }
+            ]
+        }
+    ]
+}

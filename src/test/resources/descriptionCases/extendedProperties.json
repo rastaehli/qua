@@ -1,0 +1,7 @@
+{
+  "parent":  "namedDescription",
+  "name": "extendedProperties",
+  "properties": {
+    "newProperty1": "value1"
+  }
+}

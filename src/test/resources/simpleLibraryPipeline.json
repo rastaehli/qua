@@ -1,0 +1,7 @@
+{
+    "schemaVersion": "0.1",
+    "build:type": "build:maven/jar",
+    "build:parents": [
+        "build:visibility"
+    ]
+}

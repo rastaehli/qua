@@ -1,0 +1,9 @@
+{
+  "name": "testNamedDescription",
+  "type":  "qua:exampleType",
+  "properties": {
+    "stringProp": "value",
+    "numberProp": 1.3,
+    "descriptionProp": { "type":  "qua:exampleType" }
+  }
+}
