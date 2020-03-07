@@ -15,7 +15,7 @@ import java.util.Map;
  * A service conforms to this description only if the type matches and it hasMatchingValue all the listed properties.
  * When a service is built, it can be accessed by its "service" property.
  */
-public class Description implements Behavior, ImplementationPlan, Access {
+public class Description implements Behavior, Plan, Access {
 
     protected String name;
     protected String type;  // name of the behavior of the service

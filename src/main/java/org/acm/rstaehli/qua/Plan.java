@@ -2,7 +2,7 @@ package org.acm.rstaehli.qua;
 
 import org.acm.rstaehli.qua.exceptions.NoImplementationFound;
 
-public interface ImplementationPlan {
+public interface Plan {
     boolean isProvisioned();
     boolean isAssembled();
     boolean isActive();
