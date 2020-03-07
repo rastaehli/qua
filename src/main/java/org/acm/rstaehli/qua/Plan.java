@@ -1,5 +1,6 @@
-package tools;
+package org.acm.rstaehli.qua;
 
+import org.acm.rstaehli.qua.Builder;
 import org.acm.rstaehli.qua.Description;
 
 import java.util.HashMap;
@@ -82,7 +83,7 @@ public class Plan {
             if (o instanceof Map) {
                 return new Description((Map<String,Object>)o);
             }
-            throw new IllegalStateException("builder tools is not a map");
+            throw new IllegalStateException("builder obsolete is not a map");
         } else {
             return null;
         }

@@ -1,10 +1,9 @@
-package com.expd.tools;
+package org.acm.rstaehli.qua.tools;
 
-import org.acm.rstaehli.qua.tools.Serializer;
 import org.junit.Before;
 import org.junit.Test;
 import org.acm.rstaehli.qua.Description;
-import tools.NoImplementationFound;
+import org.acm.rstaehli.qua.exceptions.NoImplementationFound;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -50,31 +49,31 @@ public class SerializerTest {
     public void test_json_planWithDependencies() {
         desc = fromCase("planWithDependencies");
         assertTrue(desc.typed());
-        assertTrue(desc.getPlan().getDependencies().size() > 1);
+        assertTrue(desc.getPlan().dependencies.size() > 1);
     }
 
     @Test
     public void test_json_extendedProperties() {
         desc = fromCase("extendedProperties");
         assertTrue(desc.typed());
-        assertTrue(desc.getProperties().get("newProperty1").equals("value1"));
-        assertTrue((Double)(desc.getProperties().get("numberProp")) == 1.3 );
+        assertTrue(desc.properties.get("newProperty1").equals("value1"));
+        assertTrue((Double)(desc.properties.get("numberProp")) == 1.3 );
     }
 
     @Test
     public void test_json_multiLevelInheritance() {
         desc = fromCase("multiLevelInheritance");
         assertTrue(desc.typed());
-        assertTrue(desc.getProperties().get("newProperty2").equals("value2"));
-        assertTrue(desc.getProperties().get("newProperty1").equals("value99"));  // child overrode value
-        assertTrue((Double)(desc.getProperties().get("numberProp")) == 1.3 );
+        assertTrue(desc.properties.get("newProperty2").equals("value2"));
+        assertTrue(desc.properties.get("newProperty1").equals("value99"));  // child overrode value
+        assertTrue((Double)(desc.properties.get("numberProp")) == 1.3 );
     }
 
     @Test
     public void test_json_depotExample() throws FileNotFoundException {
         desc = Serializer.descriptionFromJsonFile("src/test/resources/depotExample.json");
-        assertTrue(desc.getProperties().containsKey("artifacts"));
-        assertTrue(((List)(desc.getProperties().get("artifacts"))).size() > 10);
+        assertTrue(desc.properties.containsKey("artifacts"));
+        assertTrue(((List)(desc.properties.get("artifacts"))).size() > 10);
     }
 
     @Test(expected = NoImplementationFound.class)
