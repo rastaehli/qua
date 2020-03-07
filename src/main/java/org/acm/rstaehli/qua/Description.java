@@ -1,9 +1,9 @@
 package org.acm.rstaehli.qua;
 
+import org.acm.rstaehli.qua.exceptions.NoImplementationFound;
+
 import java.util.HashMap;
 import java.util.Map;
-
-import static org.acm.rstaehli.qua.Plan.SERVICE_INTERFACE;
 
 /**
  * Description is a meta object to reflect on and manage the implementation of a service.
@@ -12,18 +12,19 @@ import static org.acm.rstaehli.qua.Plan.SERVICE_INTERFACE;
  * - properties: may contain additional attributes that restrict the type:
  * - plan: describes the implementation of the service.  It may also be executed to build the service.
  *
- * A service conforms to this description only if the type matches and it has all the listed properties.
+ * A service conforms to this description only if the type matches and it hasMatchingValue all the listed properties.
  * When a service is built, it can be accessed by its "service" property.
  */
-public class Description {
+public class Description implements Behavior, ImplementationPlan, Access {
 
-    public String name;
-    public String type;  // name of the behavior of the service
-    public Map<String, Object> properties;  // type variables (guaranteed by the builder)
-    public Description builder = null; // service to build type from dependencies
-    public Map<String, Object> dependencies = new HashMap<>();  // services needed by the builder
-    public String serviceId;  // reference for the service implementation
-    public int status = UNKNOWN;
+    protected String name;
+    protected String type;  // name of the behavior of the service
+    protected Map<String, Object> properties;  // type variables (guaranteed by the builder)
+    protected Description builderDescription = null; // service to build type from dependencies
+    protected Map<String, Object> dependencies = new HashMap<>();  // services needed by the builder
+    protected Object serviceObject;  // the primary object interface of this description
+    protected Map<String, String> interfaces;  // repositiory names of all interfaces
+    protected int status = UNKNOWN;
 
     public static final int UNKNOWN = 0;
     public static final int TYPED = 1;
@@ -34,21 +35,34 @@ public class Description {
 
     public Description(Map<String, Object> jsonObject) {
         this.name = getField(jsonObject, "name");
-        this.type = getField(jsonObject, "type");
+        this.type = getField(jsonObject, "type", "UNKNOWN");
         this.properties = getField(jsonObject, "properties", new HashMap<>());
-        this.builder = getField(jsonObject, "builder");
+        this.builderDescription = getField(jsonObject, "builder");
         this.dependencies = getField(jsonObject, "dependencies", new HashMap<>());
-        this.serviceId = getField(jsonObject, "serviceId");
+        this.serviceObject = getField(jsonObject, "serviceObject");
+        this.interfaces = getField(jsonObject, "interfaces", new HashMap<>());
         computeStatus();
     }
 
-    private void computeStatus() {
-        status = PLANNED;  // duh!  this IS the plan
-        if (serviceId != null) {
-            status = ACTIVE;  // if service has been built
-            return;
+    protected void computeStatus() {
+        if (serviceObject != null) {
+            status = ACTIVE;  // if service hasMatchingValue been built
+            return;  // don't care if typed or planned
         }
-        int leastDependencyStatus = PROVISIONED;
+        if (!interfaces.isEmpty()) {
+            status = ASSEMBLED;  // built and interfaces identified
+            return;  // don't care if typed or planned
+        }
+        if (type.equals(UNKNOWN)) {
+            status = UNKNOWN;
+            return;  // can't plan without type
+        } else {
+            status = TYPED;  // still need to check plan status
+        }
+        if (builderDescription != null) {
+            status = PLANNED;
+        }
+        int leastDependencyStatus = PROVISIONED;  // default value if no dependencies
         for (Object o: dependencies.values()) {
             if (o instanceof Description) {
                 leastDependencyStatus = Integer.min(((Description) o).status, leastDependencyStatus);
@@ -62,7 +76,7 @@ public class Description {
         this.type = type;
     }
 
-    public <T> T getField(Map<String,Object> o, String fieldName) {
+    protected  <T> T getField(Map<String,Object> o, String fieldName) {
         return getField(o, fieldName, null);
     }
 
@@ -74,10 +88,10 @@ public class Description {
      * @param <T> return type of jsonObject value
      * @return
      */
-    public <T> T getField(Map<String,Object> jsonObject, String fieldName, T defaultValue) {
+    protected <T> T getField(Map<String,Object> jsonObject, String fieldName, T defaultValue) {
         if (jsonObject.containsKey(fieldName)) {
             Object value = jsonObject.get(fieldName);
-            if (value instanceof Map) {
+            if (value instanceof Map && !fieldName.equals("properties") && !fieldName.equals("dependencies")) {
                 value = new Description((Map<String, Object>)value);
             }
             return (T)value;
@@ -86,133 +100,223 @@ public class Description {
         }
     }
 
-    public static void copyMissingProperties(Description parent, Description desc) {
-        if (desc.name == null & parent.name != null) {
-            desc.name = parent.name;
+    public void inheritFrom(Description parent) {
+        if (name == null & parent.name != null) {
+            name = parent.name;
         }
-        if (desc.type == null & parent.type != null) {
-            desc.type = parent.type;
+        if (type == null & parent.type != null) {
+            type = parent.type;
         }
-        if (desc.builder == null & parent.builder != null) {
-            desc.builder = parent.builder;
+        if (builderDescription == null & parent.builderDescription != null) {
+            builderDescription = parent.builderDescription;
         }
-        if (desc.serviceId == null & parent.serviceId != null) {
-            desc.serviceId = parent.serviceId;
+        if (serviceObject == null & parent.serviceObject != null) {
+            serviceObject = parent.serviceObject;
         }
         for (String name: parent.properties.keySet()) {
-            if (!desc.properties.containsKey(name)) {
-                desc.properties.put(name, parent.properties.get(name));
+            if (!properties.containsKey(name)) {
+                properties.put(name, parent.properties.get(name));
             }
         }
         for (String name: parent.dependencies.keySet()) {
-            if (!desc.dependencies.containsKey(name)) {
-                desc.dependencies.put(name, parent.dependencies.get(name));
+            if (!dependencies.containsKey(name)) {
+                dependencies.put(name, parent.dependencies.get(name));
             }
         }
-        desc.computeStatus();
+        computeStatus();
+    }
+
+    // behavior
+    @Override
+    public Description setType(String name) {
+        return null;
+    }
+
+    @Override
+    public Description setProperty(String key, Object value) {
+        return null;
+    }
+
+    @Override
+    public String type() {
+        return type;
+    }
+
+    @Override
+    public Map<String, Object> properties() {
+        return properties;
+    }
+
+    public Map<String, Object> dependencies() {
+        return dependencies;
+    }
+
+    @Override
+    public boolean hasProperty(String key) {
+        return properties.containsKey(key);
+    }
+
+    @Override
+    public boolean satisfies(Behavior required) {
+        // type must match
+        if (!type.equals(required.type())) {
+            return false;
+        }
+        // must have all goal properties
+        for (String name: required.properties().keySet()) {
+            if (!satisfies(properties.get(name), required.properties().get(name))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    protected boolean satisfies(Object value1, Object value2) {
+        if (value1 == null ) {
+            return false;
+        }
+        if (value1 instanceof String && value1.equals(value2)) {
+            return true;
+        }
+        if (value1 instanceof Number && value1.equals(value2)) {
+            return true;
+        }
+        if (!(value1 instanceof Description)) {
+            return false;  // we don't support any other types for a property
+        }
+        Description propertyDescription = (Description)value1;
+        Description requiredDescription = (Description)value2;
+        return propertyDescription.satisfies(requiredDescription);
+    }
+
+
+    // queries about implementation status
+
+
+    public boolean isTyped() {
+        return status >= TYPED;
+    }
+
+    public boolean isPlanned() {
+        return status >= PLANNED;
+    }
+
+    @Override
+    public boolean isProvisioned() {
+        return status >= PROVISIONED;
+    }
+
+    @Override
+    public boolean isAssembled() {
+        return status >= ASSEMBLED;
+    }
+
+    @Override
+    public boolean isActive() {
+        return status >= ACTIVE;
     }
 
     // operations to change implementation status
 
-    public Description plan() {
-        if (builder == null) {
-            Description plan = (new Repository()).implementationFor(type);
-            copyMissingProperties(plan, this);
-        }
-        // ensure all dependencies are fully planned
-        if (!plan.planned()) {
-            plan.plan();
-        }
-        return this;
+    public Description plan() throws NoImplementationFound {
+        return plan(null);
     }
 
-
-    public void plan() {
-        if (planned()) {
-            return;
+    public Description plan(Repository repo) throws NoImplementationFound {
+        if (isPlanned()) {
+            return this;
         }
+        Description impl = repo.implementationFor(type, properties);
+        // copy impl state to this description
+        builderDescription = impl.builderDescription;
+        dependencies = impl.dependencies;
+        status = impl.status;
         for (Object o: dependencies.values()) {
             if (o instanceof Description) {
                 Description d = (Description)o;
-                if (!d.planned()) {
-                    d.plan();
+                if (!d.isPlanned()) {
+                    d.plan(repo);
                 }
             }
         }
-        status = PROVISIONED;
+        status = PLANNED;
+        return this;
+    }
+
+    public Description provision() throws NoImplementationFound {
+        return provision(null);
     }
 
     /**
      * discover, provide and/or build all required dependencies
      */
-    public void provision() {
-        if (provisioned()) {
-            return;
+    @Override
+    public Description provision(Repository repo) throws NoImplementationFound {
+        if (isProvisioned()) {
+            return this;
         }
-        if (!planned()) {
-            plan();
+        if (!isPlanned()) {
+            plan(repo);
         }
         for (Object o: dependencies.values()) {
             if (o instanceof Description) {
                 Description d = (Description)o;
-                if (!d.provisioned()) {
-                    d.provision();
+                if (!d.isProvisioned()) {
+                    d.provision(repo);
                 }
             }
         }
         status = PROVISIONED;
-    }
-
-    public Description assemble() {
-        return build();
-    }
-
-    private Description build(Repository r) {
-        Builder realBuilder = r.realObjectFor(builder.serviceId);
         return this;
     }
 
-    public void activate(Description d) {
-        execute(d);  // current implementation does not distinguish assembled and active states
+    @Override
+    public Description assemble() throws NoImplementationFound {
+        return assemble(null);
     }
 
-    public void execute(Description d) {
-        if (active()) {
-            return;  // already assembled and active
+    @Override
+    public Description assemble(Repository repo) throws NoImplementationFound {
+        if (isAssembled()) {
+            return this;
         }
-        if (!provisioned()) {
-            provision();
+        if (!isProvisioned()) {
+            provision(repo);
         }
-        Object service = ((Builder)builder.getService()).execute(blueprint, dependencies);
-        addProperty(SERVICE_INTERFACE, service);
+        builder().assemble(this);
+        status = ASSEMBLED;
+        return this;
+    }
+
+    @Override
+    public Description activate() throws NoImplementationFound {
+        return activate(null);
+    }
+
+    @Override
+    public Description activate(Repository repo) throws NoImplementationFound {
+        if (isActive()) {
+            return this;  // already assembled and active
+        }
+        if (!isAssembled()) {
+            assemble();
+        }
+        builder().start(this);
         status = ACTIVE;
-
+        return this;
     }
 
-    public boolean active() {
-        return status >= ACTIVE;
+    @Override
+    public Object service() {
+        return serviceObject;
     }
 
-    public boolean assembled() {
-        return status >= ASSEMBLED;
+    @Override
+    public Map<String, String> interfaces() {
+        return interfaces;
     }
 
-    public boolean provisioned() {
-        return status >= PROVISIONED;
-    }
-
-    public boolean planned() {
-        return status >= PLANNED;
-    }
-
-    public boolean typed() {
-        return status >= TYPED;
-    }
-    public boolean unknown() {
-        return status >= UNKNOWN;
-    }
-
-    public int getStatus() {
-        return status;
+    public Builder builder() {
+        return (Builder)builderDescription.service();
     }
 }

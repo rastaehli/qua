@@ -6,9 +6,7 @@ import org.acm.rstaehli.qua.Repository;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.io.IOException;
 import java.nio.file.Paths;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -25,23 +23,27 @@ public class Serializer {
 
     private static Repository repo;
 
-    public static Description descriptionFromJsonFile(String path) throws FileNotFoundException {
+    public Description descriptionFromJsonFile(String path) throws FileNotFoundException {
         return descriptionFromJsonFile(path, getDefaultRepo());
     }
 
-    private static Repository getDefaultRepo() {
+    public void setRepo(Repository r) {
+        repo = r;
+    }
+
+    private Repository getDefaultRepo() {
         if (repo == null) {
             repo = new Repository();
         }
         return repo;
     }
 
-    public static Description descriptionFromJsonFile(String path, Repository repo) throws FileNotFoundException {
+    public Description descriptionFromJsonFile(String path, Repository repo) throws FileNotFoundException {
         Map map = new Gson().fromJson(new FileReader(Paths.get(path).toFile()), Map.class);
         Description desc = new Description(map);
         if (map.containsKey("parent")) {
             Description parent = repo.lookupByName((String) map.get("parent"));
-            Description.shareInheritance(parent, desc);
+            desc.inheritFrom(parent);
         }
         return desc;
     }

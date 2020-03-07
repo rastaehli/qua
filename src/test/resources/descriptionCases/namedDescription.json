@@ -1,5 +1,5 @@
 {
-  "name": "testNamedDescription",
+  "name": "namedDescription",
   "type":  "qua:exampleType",
   "properties": {
     "stringProp": "value",

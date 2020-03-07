@@ -1,6 +1,4 @@
 {
     "type": "gitlabBuildAutomation",
-    "plan": {
-        "builder": { "type": "build:gitlabPipelineGenerator" }
-    }
+    "builder": { "type": "build:gitlabPipelineGenerator" }
 }

@@ -1,5 +1,7 @@
 package org.acm.rstaehli.qua;
 
+import org.acm.rstaehli.qua.exceptions.NoImplementationFound;
+
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -62,8 +64,11 @@ public class Repository {
         return bestOf(matches);
     }
 
-    public Description implementationFor(String type, Map<String,Object> requiredProperties) {
+    public Description implementationFor(String type, Map<String,Object> requiredProperties) throws NoImplementationFound {
         List<Description> matches = typeMap.get(type);
+        if (matches == null) {
+            throw new NoImplementationFound("no implementaiton for type: " + type);
+        }
         if (requiredProperties.isEmpty()) {
             return bestOf(matches);
         }
