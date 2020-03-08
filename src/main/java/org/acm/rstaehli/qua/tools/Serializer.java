@@ -3,6 +3,7 @@ package org.acm.rstaehli.qua.tools;
 import com.google.gson.Gson;
 import org.acm.rstaehli.qua.Description;
 import org.acm.rstaehli.qua.Repository;
+import org.acm.rstaehli.qua.exceptions.NoImplementationFound;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -23,22 +24,15 @@ public class Serializer {
 
     private static Repository repo;
 
-    public Description descriptionFromJsonFile(String path) throws FileNotFoundException {
-        return descriptionFromJsonFile(path, getDefaultRepo());
+    public Description descriptionFromJsonFile(String path) throws FileNotFoundException, NoImplementationFound {
+        return descriptionFromJsonFile(path, repo);
     }
 
     public void setRepo(Repository r) {
         repo = r;
     }
 
-    private Repository getDefaultRepo() {
-        if (repo == null) {
-            repo = new Repository();
-        }
-        return repo;
-    }
-
-    public Description descriptionFromJsonFile(String path, Repository repo) throws FileNotFoundException {
+    public Description descriptionFromJsonFile(String path, Repository repo) throws FileNotFoundException, NoImplementationFound {
         Map map = new Gson().fromJson(new FileReader(Paths.get(path).toFile()), Map.class);
         Description desc = new Description(map);
         if (map.containsKey("parent")) {
