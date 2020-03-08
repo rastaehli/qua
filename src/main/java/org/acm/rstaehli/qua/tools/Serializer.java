@@ -8,6 +8,8 @@ import org.acm.rstaehli.qua.exceptions.NoImplementationFound;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -33,12 +35,46 @@ public class Serializer {
     }
 
     public Description descriptionFromJsonFile(String path, Repository repo) throws FileNotFoundException, NoImplementationFound {
-        Map map = new Gson().fromJson(new FileReader(Paths.get(path).toFile()), Map.class);
+        Map<String,Object> map = new Gson().fromJson(new FileReader(Paths.get(path).toFile()), Map.class);
+        Map<String,String> namespaces = getNamespaces(map);
+        replaceAliasesWithNamespaceTranslations(map, namespaces);
+
         Description desc = new Description(map);
-        if (map.containsKey("parent")) {
-            Description parent = repo.lookupByName((String) map.get("parent"));
-            desc.inheritFrom(parent);
+        if (map.containsKey("parents")) {
+            List<String> parentNames = (List<String>)map.get("parents");
+            for (String name: parentNames) {
+                Description parent = repo.lookupByName(name);
+                desc.inheritFrom(parent);
+            }
         }
         return desc;
+    }
+
+    private void replaceAliasesWithNamespaceTranslations(Map<String,Object> map, Map<String, String> namespaces) {
+        for (String key: map.keySet()) {
+            Object o = map.get(key);
+            if (o instanceof String) {
+                String s = (String)o;
+                int aliasEnd = s.indexOf(':');
+                if (aliasEnd > 0) {
+                    String alias = s.substring(0,aliasEnd);
+                    String translation = namespaces.get(alias);
+                    if (translation != null) {
+                        // replace original value with translation substituted for alias
+                        map.put(key, translation + s.substring(aliasEnd + 1,s.length()));
+                    }
+                }
+            }
+        }
+    }
+
+    private Map<String,String> getNamespaces(Map<String,Object> jsonObject) {
+        if (jsonObject.containsKey("namespaces")) {
+            Object value = jsonObject.get("namespaces");
+            if (value instanceof Map) {
+                return (Map<String,String>)value;
+            }
+        }
+        return new HashMap<>();
     }
 }

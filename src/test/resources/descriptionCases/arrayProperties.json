@@ -1,0 +1,9 @@
+{
+  "type":  "qua:exampleType",
+  "properties": {
+    "stringProp": "value",
+    "numberProp": 1.3,
+    "listOfStrings": [ "one", "two" ],
+    "descriptionProp": { "type":  "qua:exampleType" }
+  }
+}

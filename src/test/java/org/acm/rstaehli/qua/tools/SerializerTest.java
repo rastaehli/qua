@@ -10,6 +10,7 @@ import org.acm.rstaehli.qua.exceptions.NoImplementationFound;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.List;
 
 import static junit.framework.TestCase.assertTrue;
 
@@ -76,4 +77,33 @@ public class SerializerTest {
         assertTrue(desc.isTyped());
         desc.plan(repo);
     }
+
+    @Test
+    public void test_namespaces() throws Exception {
+        desc = repo.lookupByName("namespace1AliasNs1");
+        assertTrue(desc.type().equals("namespace1exampleType"));
+    }
+
+    @Test
+    public void test_json_arrayProperties() throws Exception {
+        desc = repo.lookupByName("arrayProperties");
+        assertTrue(desc.isTyped());
+        Object o = desc.properties().get("listOfStrings");
+        assertTrue(o instanceof List);
+        List<String> strings = (List<String>)o;
+        assertTrue(strings.size() == 2);
+        assertTrue(strings.get(0).equals("one"));
+    }
+
+    @Test
+    public void test_json_multiParentInheritance() throws Exception {
+        desc = repo.lookupByName("multiParentInheritance");
+        assertTrue(desc.isTyped());
+        assertTrue(desc.type().equals("qua:exampleType"));
+        assertTrue(desc.properties().get("childProperty2").equals("value2"));
+        assertTrue(desc.properties().get("childProperty1").equals("value99"));
+        assertTrue(desc.properties().get("stringProp").equals("value"));
+        assertTrue(desc.properties().get("descriptionProp") instanceof Description);
+    }
+
 }

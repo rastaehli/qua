@@ -1,5 +1,5 @@
 {
-  "parent":  "namedDescription",
+  "parents":  ["namedDescription"],
   "name": "extendedProperties",
   "properties": {
     "newProperty1": "value1"

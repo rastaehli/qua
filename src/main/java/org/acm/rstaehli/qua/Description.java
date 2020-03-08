@@ -17,6 +17,7 @@ import java.util.Map;
  */
 public class Description implements Behavior, Plan, Access {
 
+    private static final String UNKNOWN_TYPE = "UNKNOWN_TYPE";
     protected String name;
     protected String type;  // name of the behavior of the service
     protected Map<String, Object> properties;  // type variables (guaranteed by the builder)
@@ -35,7 +36,7 @@ public class Description implements Behavior, Plan, Access {
 
     public Description(Map<String, Object> jsonObject) {
         this.name = getField(jsonObject, "name");
-        this.type = getField(jsonObject, "type", "UNKNOWN");
+        this.type = getField(jsonObject, "type", UNKNOWN_TYPE);
         this.properties = getField(jsonObject, "properties", new HashMap<>());
         this.builderDescription = getField(jsonObject, "builder");
         this.dependencies = getField(jsonObject, "dependencies", new HashMap<>());
@@ -91,8 +92,12 @@ public class Description implements Behavior, Plan, Access {
     protected <T> T getField(Map<String,Object> jsonObject, String fieldName, T defaultValue) {
         if (jsonObject.containsKey(fieldName)) {
             Object value = jsonObject.get(fieldName);
-            if (value instanceof Map && !fieldName.equals("properties") && !fieldName.equals("dependencies")) {
-                value = new Description((Map<String, Object>)value);
+            if (value instanceof Map) {
+                if (fieldName.equals("properties") || fieldName.equals("dependencies")) {
+                    value = translateDescriptions((Map<String, Object>)value);
+                } else {
+                    value = new Description((Map<String, Object>)value);
+                }
             }
             return (T)value;
         } else {
@@ -100,11 +105,23 @@ public class Description implements Behavior, Plan, Access {
         }
     }
 
+    private Map<String, Object> translateDescriptions(Map<String, Object> map) {
+        for (String key: map.keySet()) {
+            Object value = map.get(key);
+            if (value instanceof Map) {  // serialization assumes all maps are Description objects
+                Map<String, Object> translatedValue = translateDescriptions((Map<String, Object>)value);
+                Description desc = new Description(translatedValue);
+                map.put(key, desc);
+            }
+        }
+        return map;
+    }
+
     public void inheritFrom(Description parent) {
         if (name == null & parent.name != null) {
             name = parent.name;
         }
-        if (type == null & parent.type != null) {
+        if (type == null || type.equals(UNKNOWN_TYPE) & parent.type != null) {
             type = parent.type;
         }
         if (builderDescription == null & parent.builderDescription != null) {

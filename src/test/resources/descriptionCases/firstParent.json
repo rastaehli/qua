@@ -1,0 +1,7 @@
+{
+  "name": "firstParent",
+  "type":  "qua:exampleType",
+  "properties": {
+    "descriptionProp": { "type":  "qua:exampleType" }
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "name": "secondParent",
+  "type":  "qua:exampleType",
+  "properties": {
+    "stringProp": "value"
+  }
+}

@@ -1,1 +1,1 @@
-{ "parent":  "namedDescription" }
+{ "parents":  ["namedDescription"] }

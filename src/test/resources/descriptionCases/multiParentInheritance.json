@@ -1,0 +1,7 @@
+{
+  "parents":  ["firstParent", "secondParent"],
+  "properties": {
+    "childProperty1": "value99",
+    "childProperty2": "value2"
+  }
+}
