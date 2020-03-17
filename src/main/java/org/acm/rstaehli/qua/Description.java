@@ -19,11 +19,11 @@ public class Description implements Behavior, Plan, Access {
 
     private static final String UNKNOWN_TYPE = "UNKNOWN_TYPE";
     protected String name;
-    protected String type;  // name of the behavior of the service
+    public String type;  // name of the behavior of the service
     protected Map<String, Object> properties;  // type variables (guaranteed by the builder)
     protected Description builderDescription = null; // service to build type from dependencies
-    protected Map<String, Object> dependencies = new HashMap<>();  // services needed by the builder
-    protected Object serviceObject;  // the primary object interface of this description
+    public Map<String, Object> dependencies = new HashMap<>();  // services needed by the builder
+    public Object serviceObject;  // the primary object interface of this description
     protected Map<String, String> interfaces;  // repositiory names of all interfaces
     protected int status = UNKNOWN;
 
@@ -43,6 +43,10 @@ public class Description implements Behavior, Plan, Access {
         this.serviceObject = getField(jsonObject, "serviceObject");
         this.interfaces = getField(jsonObject, "interfaces", new HashMap<>());
         computeStatus();
+    }
+
+    public Description() {
+
     }
 
     protected void computeStatus() {
@@ -243,7 +247,7 @@ public class Description implements Behavior, Plan, Access {
         if (isPlanned()) {
             return this;
         }
-        Description impl = repo.implementationFor(type, properties);
+        Description impl = repo.implementationByType(type, properties);
         // copy impl state to this description
         builderDescription = impl.builderDescription;
         dependencies = impl.dependencies;
@@ -316,7 +320,7 @@ public class Description implements Behavior, Plan, Access {
             return this;  // already assembled and active
         }
         if (!isAssembled()) {
-            assemble();
+            assemble(repo);
         }
         builder().start(this);
         status = ACTIVE;

@@ -57,4 +57,21 @@ public abstract class AbstractRepository implements Repository {
         Description requiredDescription = (Description)requiredValue;
         return propertyDescription.satisfies(requiredDescription);
     }
+
+    @Override
+    public Description implementationMatching(Description desc) throws NoImplementationFound {
+        if (desc.isActive()) {
+            return desc;    // why would you even call if you already have the implementation?
+        }
+        if (desc.name != null) {
+            try {
+                return implementationByName(desc.name);
+            } catch(NoImplementationFound e) {}
+        }
+        if (desc.isTyped()) {
+            return implementationByType(desc.type, desc.properties);
+        } else {
+            throw new NoImplementationFound("unknown type");
+        }
+    }
 }

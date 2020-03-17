@@ -4,9 +4,6 @@ import org.acm.rstaehli.qua.exceptions.NoImplementationFound;
 import org.acm.rstaehli.qua.tools.Serializer;
 
 import java.io.FileNotFoundException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -30,19 +27,19 @@ public class FileBasedRepository extends AbstractRepository {
         cacheRepository.advertise(impl);
     }
 
-    public Description lookupByName(String name) throws NoImplementationFound {
+    public Description implementationByName(String name) throws NoImplementationFound {
         try {
             return serializer.descriptionFromJsonFile(fileDirectoryPath + name + ".json", this);
         } catch (FileNotFoundException e) {
-            return cacheRepository.lookupByName(name);
+            return cacheRepository.implementationByName(name);
         }
     }
 
-    public Description implementationFor(String type) throws NoImplementationFound {
-        return cacheRepository.implementationFor(type);
+    public Description implementationByType(String type) throws NoImplementationFound {
+        return cacheRepository.implementationByType(type);
     }
 
-    public Description implementationFor(String type, Map<String,Object> requiredProperties) throws NoImplementationFound {
-        return cacheRepository.implementationFor(type, requiredProperties);
+    public Description implementationByType(String type, Map<String,Object> requiredProperties) throws NoImplementationFound {
+        return cacheRepository.implementationByType(type, requiredProperties);
     }
 }

@@ -54,18 +54,19 @@ public class InMemoryRepository extends AbstractRepository {
         list.add(value);  // TODO: make this modification thread safe
     }
 
-    public Description lookupByName(String name) throws NoImplementationFound {
+    public Description implementationByName(String name) throws NoImplementationFound {
         List<Description> matches = nameMap.get(name);
         return firstOf(matches);
     }
 
-    public Description implementationFor(String type) throws NoImplementationFound {
+    public Description implementationByType(String type) throws NoImplementationFound {
         List<Description> matches = typeMap.get(type);
         return firstOf(matches);
     }
 
-    public Description implementationFor(String type, Map<String,Object> requiredProperties) throws NoImplementationFound {
+    public Description implementationByType(String type, Map<String,Object> requiredProperties) throws NoImplementationFound {
         List<Description> matches = typeMap.get(type);
         return firstWithProperties(matches, requiredProperties);
     }
+
 }

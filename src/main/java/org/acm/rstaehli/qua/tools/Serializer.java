@@ -43,7 +43,7 @@ public class Serializer {
         if (map.containsKey("parents")) {
             List<String> parentNames = (List<String>)map.get("parents");
             for (String name: parentNames) {
-                Description parent = repo.lookupByName(name);
+                Description parent = repo.implementationByName(name);
                 desc.inheritFrom(parent);
             }
         }
