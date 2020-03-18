@@ -4,14 +4,15 @@ import org.acm.rstaehli.qua.exceptions.NoImplementationFound;
 
 import java.util.Map;
 
+/**
+ * Interface for just the description of how a service behaves.
+ */
 public interface Behavior {
-    String type();
-    Map<String, Object> properties();
+    String type();  // the name for the behavior
+    Map<String, Object> properties();  // required properties of this instance of the type
     boolean hasProperty(String key);
     boolean satisfies(Behavior required);
 
     boolean isTyped();
-    Description setType(String name);  // name the type of behavior required
-    Description setProperty(String key, Object value);  // set type property value
     Description plan(Repository repo) throws NoImplementationFound;  // find implementation plan in repo
 }

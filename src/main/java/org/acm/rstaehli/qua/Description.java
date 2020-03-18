@@ -15,15 +15,16 @@ import java.util.Map;
  * A service conforms to this description only if the type matches and it hasMatchingValue all the listed properties.
  * When a service is built, it can be accessed by its "service" property.
  */
-public class Description implements Behavior, Plan, Access {
+public class Description implements Behavior, Plan, Access, Construction {
 
     private static final String UNKNOWN_TYPE = "UNKNOWN_TYPE";
+
     protected String name;
-    public String type;  // name of the behavior of the service
+    protected String type;  // name of the behavior of the service
     protected Map<String, Object> properties;  // type variables (guaranteed by the builder)
     protected Description builderDescription = null; // service to build type from dependencies
-    public Map<String, Object> dependencies = new HashMap<>();  // services needed by the builder
-    public Object serviceObject;  // the primary object interface of this description
+    protected Map<String, Object> dependencies = new HashMap<>();  // services needed by the builder
+    protected Object serviceObject;  // the primary object interface of this description
     protected Map<String, String> interfaces;  // repositiory names of all interfaces
     protected int status = UNKNOWN;
 
@@ -49,18 +50,18 @@ public class Description implements Behavior, Plan, Access {
 
     }
 
-    protected void computeStatus() {
+    public Description computeStatus() {
         if (serviceObject != null) {
             status = ACTIVE;  // if service hasMatchingValue been built
-            return;  // don't care if typed or planned
+            return this;  // don't care if typed or planned
         }
-        if (!interfaces.isEmpty()) {
+        if (interfaces != null && !interfaces.isEmpty()) {
             status = ASSEMBLED;  // built and interfaces identified
-            return;  // don't care if typed or planned
+            return this;  // don't care if typed or planned
         }
         if (type.equals(UNKNOWN)) {
             status = UNKNOWN;
-            return;  // can't plan without type
+            return this;  // can't plan without type
         } else {
             status = TYPED;  // still need to check plan status
         }
@@ -74,6 +75,7 @@ public class Description implements Behavior, Plan, Access {
             }
         }
         status = Integer.min(status, leastDependencyStatus);
+        return this;
     }
 
 
@@ -147,15 +149,62 @@ public class Description implements Behavior, Plan, Access {
         computeStatus();
     }
 
+    @Override
+    public Description setName(String n) {
+        name = n;
+        return this;
+    }
+
     // behavior
     @Override
-    public Description setType(String name) {
-        return null;
+    public Description setType(String t) {
+        type = t;
+        return this;
+    }
+
+    @Override
+    public Description setProperties(Map<String, Object> p) {
+        properties = p;
+        return this;
+    }
+
+    @Override
+    public Description setBuilderDescriptions(Description d) {
+        builderDescription = d;
+        return this;
+    }
+
+    @Override
+    public Description setDependencies(Map<String, Object> d) {
+        dependencies = d;
+        return this;
+    }
+
+    @Override
+    public Description setServiceObject(Object o) {
+        serviceObject = o;
+        return this;
+    }
+
+    @Override
+    public Description setInterfaces(Map<String, String> i) {
+        interfaces = i;
+        return this;
+    }
+
+    @Override
+    public Description setStatus(int s) {
+        status = s;
+        return this;
     }
 
     @Override
     public Description setProperty(String key, Object value) {
         return null;
+    }
+
+    public String name() {
+        return name;
     }
 
     @Override
@@ -175,6 +224,20 @@ public class Description implements Behavior, Plan, Access {
     @Override
     public boolean hasProperty(String key) {
         return properties.containsKey(key);
+    }
+
+    @Override
+    public Object service() {
+        return serviceObject;
+    }
+
+    @Override
+    public Map<String, String> interfaces() {
+        return interfaces;
+    }
+
+    public Builder builder() {
+        return (Builder)builderDescription.service();
     }
 
     @Override
@@ -325,19 +388,5 @@ public class Description implements Behavior, Plan, Access {
         builder().start(this);
         status = ACTIVE;
         return this;
-    }
-
-    @Override
-    public Object service() {
-        return serviceObject;
-    }
-
-    @Override
-    public Map<String, String> interfaces() {
-        return interfaces;
-    }
-
-    public Builder builder() {
-        return (Builder)builderDescription.service();
     }
 }

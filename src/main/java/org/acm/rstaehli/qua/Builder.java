@@ -1,11 +1,11 @@
 package org.acm.rstaehli.qua;
 
 public interface Builder {
-    void assemble(Plan impl);  // build from dependencies
+    void assemble(Description impl);  // build from dependencies
 
-    void start(Plan impl);  // enable service activity
+    void start(Description impl);  // enable service activity
 
-    void stop(Plan impl);  // disable further service activity
+    void stop(Description impl);  // disable further service activity
 
-    void recycle(Plan impl);  // release resources
+    void recycle(Description impl);  // release resources
 }

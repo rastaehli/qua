@@ -30,11 +30,11 @@ class JvmObjectBuilder implements Builder {
 
     public static Description forConstructor(Class aClass, List<Class> constructorArgTypes, List<Object> constructorArgValues) {
         Description d = new Description();
-        d.type = aClass.getName();
-        d.serviceObject = getInstance();
-        d.dependencies = new HashMap<>();
-        d.dependencies.put("constructorArgTypes", constructorArgTypes);
-        d.dependencies.put("constructorArgValues", constructorArgValues);
+//        d.type = aClass.getName();
+//        d.serviceObject = getInstance();
+//        d.dependencies = new HashMap<>();
+//        d.dependencies.put("constructorArgTypes", constructorArgTypes);
+//        d.dependencies.put("constructorArgValues", constructorArgValues);
         return d;
     }
 
@@ -72,11 +72,10 @@ class JvmObjectBuilder implements Builder {
         return null;
     }
 
-    @Override
     public void assemble(Description impl) {
-        Constructor ctor = sift(impl.type, (List<Class>)impl.dependencies.get("constructorArgTypes"));
+        Constructor ctor = sift(impl.type(), (List<Class>)impl.dependencies().get("constructorArgTypes"));
         try {
-            impl.serviceObject = ctor.newInstance(impl.dependencies.get("constructorArgValues"));
+            impl.setServiceObject( ctor.newInstance(impl.dependencies().get("constructorArgValues")) );
         } catch (IllegalAccessException e) {
             e.printStackTrace();
         } catch (InstantiationException e) {
@@ -87,14 +86,14 @@ class JvmObjectBuilder implements Builder {
     }
 
     @Override
-    public void start(Plan impl) {
+    public void start(Description impl) {
     }
 
     @Override
-    public void stop(Plan impl) {
+    public void stop(Description impl) {
     }
 
     @Override
-    public void recycle(Plan impl) {
+    public void recycle(Description impl) {
     }
 }

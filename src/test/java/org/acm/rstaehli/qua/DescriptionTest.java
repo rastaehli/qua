@@ -18,7 +18,7 @@ public class DescriptionTest {
     @Before
     public void setUp() throws IOException {
         repo = new FileBasedRepository("src/test/resources/descriptionCases/");
-        repo.advertise(JvmObjectBuilder(Class cls, List<Class> constructorArgTypes, List<Object> ));
+//        repo.advertise(JvmObjectBuilder(Class cls, List<Class> constructorArgTypes, List<Object> ));
         serializer = new Serializer();
         serializer.setRepo(repo);
     }
