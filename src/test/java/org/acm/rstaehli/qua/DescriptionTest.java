@@ -6,7 +6,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.util.List;
 
 import static junit.framework.TestCase.assertTrue;
 
@@ -20,7 +19,7 @@ public class DescriptionTest {
         repo = new FileBasedRepository("src/test/resources/descriptionCases/");
 //        repo.advertise(JvmObjectBuilder(Class cls, List<Class> constructorArgTypes, List<Object> ));
         serializer = new Serializer();
-        serializer.setRepo(repo);
+        serializer.setParentRepo(repo);
     }
 
     @Test

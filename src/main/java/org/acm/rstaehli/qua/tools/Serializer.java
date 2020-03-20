@@ -24,14 +24,18 @@ import java.util.Map;
  */
 public class Serializer {
 
-    private static Repository repo;
+    private static Repository parentRepo;  // this Serializer responsible for resolving inheritance
 
     public Description descriptionFromJsonFile(String path) throws FileNotFoundException, NoImplementationFound {
-        return descriptionFromJsonFile(path, repo);
+        return descriptionFromJsonFile(path, parentRepo);
     }
 
-    public void setRepo(Repository r) {
-        repo = r;
+    /**
+     * Client may set the repo where parent descriptions are found.
+     * @param r
+     */
+    public void setParentRepo(Repository r) {
+        parentRepo = r;
     }
 
     public Description descriptionFromJsonFile(String path, Repository repo) throws FileNotFoundException, NoImplementationFound {

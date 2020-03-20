@@ -55,10 +55,12 @@ public class DescriberTest {
         properties.put("p1", "value1");
         properties.put("p2", "value2");
         Description builder = describer.namedService("concatenator", new Concatenator());
+
         description = describer.typedPlan(type, properties, builder, properties);
-        assertTrue(!description.isActive());
+
+        assertTrue(!description.isActive());  // no active yet
         assertTrue(description.isPlanned());
-        description.activate();
+        description.activate();  // but can be activated to get service
         assertTrue(description.service().equals("value1value2"));
     }
 //    public void test_json_minimalPlan() throws NoImplementationFound {
