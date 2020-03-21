@@ -38,9 +38,9 @@ public class Serializer {
 
         // Json file syntax allows "namespaceAliases" field to define aliases used to shorten names
         // Since these can be inherited, must first get parent JSON maps and collect alias definitions
-        // so we can translateNames them wherever they occur.
+        // so we can translate them wherever they occur.
         Map<String,String> namespaces = getNamespaces(jsonMap);
-        translateNames(jsonMap, namespaces);
+        (new Namespace(namespaces)).translate(jsonMap);
         return jsonMap;
     }
 
@@ -74,50 +74,6 @@ public class Serializer {
                     }
                 }
             }
-    }
-
-    private void translateNames(Map<String,Object> map, Map<String, String> namespaces) {
-        for (String key: map.keySet()) {
-            Object o = map.get(key);
-            if (o instanceof String) {
-                String t = translateNames((String)o, namespaces);
-                if (t != null) {
-                    map.put(key, t);
-                }
-            } else if (o instanceof Map<?,?>) {
-                translateNames((Map<String,Object>)o, namespaces);
-            } else if (o instanceof ArrayList<?>) {
-                translateNames((ArrayList<Object>)o, namespaces);
-            }
-        }
-    }
-
-    private String translateNames(String value, Map<String, String> namespaces) {
-        int aliasEnd = value.indexOf(':');
-        if (aliasEnd > 0) {
-            String alias = value.substring(0, aliasEnd);
-            String translation = namespaces.get(alias);
-            if (translation != null) {
-                return translation + value.substring(aliasEnd + 1, value.length());
-            }
-        }
-        return null;
-    }
-
-    private void translateNames(ArrayList<Object> list, Map<String, String> namespaces) {
-        for (int i=0; i<list.size(); i++) {
-            Object o = list.get(i);
-            if (o instanceof String) {
-                String t = translateNames((String)o, namespaces);
-                if (t != null) {
-                    list.set(i, t);
-                }
-            } else if (o instanceof Map<?,?>) {
-                translateNames((Map<String,Object>)o, namespaces);
-            } else if (o instanceof ArrayList<?>) {
-                translateNames((ArrayList<Object>)o, namespaces);
-            }
-        }
     }
 
     private Map<String,String> getNamespaces(Map<String,Object> jsonObject) {

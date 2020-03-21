@@ -16,15 +16,6 @@ public class InMemoryRepository extends AbstractRepository {
     public InMemoryRepository() {
         typeMap = new HashMap<>();
         nameMap = new HashMap<>();
-        this.initializeRepository();
-    }
-
-    /**
-     * bootstrap typeMap with initial set of implementations.
-     */
-    public void initializeRepository() {
-        Description desc = new Description("type");
-        advertise(desc);
     }
 
     /**

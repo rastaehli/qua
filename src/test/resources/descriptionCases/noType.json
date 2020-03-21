@@ -1,1 +1,1 @@
-{ "builder": { "type":  "test:builder" } }
+{ "builderDescription": { "type":  "test:builder" } }

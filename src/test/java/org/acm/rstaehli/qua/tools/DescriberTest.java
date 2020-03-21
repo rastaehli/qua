@@ -7,7 +7,6 @@ import org.acm.rstaehli.qua.exceptions.NoImplementationFound;
 
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import static junit.framework.TestCase.assertTrue;
@@ -18,7 +17,7 @@ public class DescriberTest {
 
     @Before
     public void setUp() throws IOException {
-        describer = new Describer();
+        describer = new Describer(new HashMap());
     }
 
     @Test

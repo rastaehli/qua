@@ -2,7 +2,9 @@ package org.acm.rstaehli.qua;
 
 import org.acm.rstaehli.qua.exceptions.NoImplementationFound;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -39,7 +41,7 @@ public class Description implements Behavior, Plan, Access, Construction {
         this.name = getField(jsonObject, "name");
         this.type = getField(jsonObject, "type", UNKNOWN_TYPE);
         this.properties = getField(jsonObject, "properties", new HashMap<>());
-        this.builderDescription = getField(jsonObject, "builder");
+        this.builderDescription = getField(jsonObject, "builderDescription");
         this.dependencies = getField(jsonObject, "dependencies", new HashMap<>());
         this.serviceObject = getField(jsonObject, "serviceObject");
         this.interfaces = getField(jsonObject, "interfaces", new HashMap<>());
@@ -288,15 +290,26 @@ public class Description implements Behavior, Plan, Access, Construction {
         return plan(null);
     }
 
+    /**
+     * find implementations matching name or type/properties and set these attributes
+     * on this description.
+     * @param repo
+     * @return
+     * @throws NoImplementationFound
+     */
     public Description plan(Repository repo) throws NoImplementationFound {
         if (isPlanned()) {
             return this;
         }
-        Description impl = repo.implementationByType(type, properties);
-        // copy impl state to this description
-        builderDescription = impl.builderDescription;
-        dependencies = impl.dependencies;
-        status = impl.status;
+        Description impl;
+        try {
+            impl = repo.implementationByName(name);
+        } catch (NoImplementationFound e) {
+            impl = repo.implementationByType(type, properties);
+        }
+
+        copyFrom(impl);
+
         if (!builderDescription.isPlanned()) {
             builderDescription.plan(repo);
         }
@@ -308,8 +321,42 @@ public class Description implements Behavior, Plan, Access, Construction {
                 }
             }
         }
-        status = PLANNED;
+
+        computeStatus();
         return this;
+    }
+
+    public Description copyFrom(Description impl) {
+        if (this.name == null && impl.name != null) {
+            this.name = impl.name;
+        }
+        if (this.type == null && impl.type != null) {
+            this.type = impl.type;
+        }
+        if (this.builderDescription == null && impl.builderDescription != null) {
+            this.builderDescription = impl.builderDescription;
+        }
+        if (this.serviceObject == null && impl.serviceObject != null) {
+            this.serviceObject = impl.serviceObject;
+        }
+        if (this.properties == null && impl.properties != null) {
+            this.properties = impl.properties;
+        }
+        if (this.dependencies == null && impl.dependencies != null) {
+            this.dependencies = impl.dependencies;
+        }
+        copyMappings(impl.properties, this.properties);
+        copyMappings(impl.dependencies, this.dependencies);
+
+        return this;
+    }
+
+    public void copyMappings(Map<String,Object> source, Map<String, Object> target) {
+        for (String key: source.keySet()) {
+            if (!target.containsKey(key)) {
+                target.put(key,source.get(key));
+            }
+        }
     }
 
     public Description provision() throws NoImplementationFound {
@@ -327,7 +374,7 @@ public class Description implements Behavior, Plan, Access, Construction {
         if (!isPlanned()) {
             plan(repo);
         }
-        if (!builderDescription.isProvisioned()) {
+        if (builderDescription != null && !builderDescription.isProvisioned()) {
             builderDescription.provision(repo);
         }
         for (Object o: dependencies.values()) {

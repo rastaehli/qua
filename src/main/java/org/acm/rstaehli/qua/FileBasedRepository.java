@@ -9,7 +9,8 @@ import java.util.Map;
 /**
  * read named implementations from file.
  * Configure with directory for files.
- * Use in-memory repository for other functions.
+ * Use in-memory repository for implementations already read, and for
+ * implementations not from file.
  */
 public class FileBasedRepository extends AbstractRepository {
 
@@ -29,9 +30,12 @@ public class FileBasedRepository extends AbstractRepository {
 
     public Description implementationByName(String name) throws NoImplementationFound {
         try {
-            return serializer.descriptionFromJsonFile(fileDirectoryPath, name);
-        } catch (FileNotFoundException e) {
             return cacheRepository.implementationByName(name);
+        } catch (NoImplementationFound e) {}
+        try {
+            return serializer.descriptionFromJsonFile(fileDirectoryPath, name);
+        } catch (FileNotFoundException e2) {
+            throw new NoImplementationFound("for name: " + name);
         }
     }
 

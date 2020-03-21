@@ -6,9 +6,16 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Describer {
+
+    private Namespace ns;
+
+    public Describer(Map<String,String> namespaces) {
+        this.ns = new Namespace(namespaces);
+    }
+
     public Description namedService(String name, Object obj) {
         return new Description()
-                .setName(name)
+                .setName(ns.translate(name))
                 .setServiceObject(obj)
                 .computeStatus();
     }
@@ -16,10 +23,10 @@ public class Describer {
     public Description typedPlan(String type, Map<String,Object> properties,
                                  Description builder, Map<String,Object> dependencies) {
         return new Description()
-                .setType(type)
-                .setProperties(properties)
+                .setType(ns.translate(type))
+                .setProperties(ns.translate(properties))
                 .setBuilderDescriptions(builder)
-                .setDependencies(dependencies)
+                .setDependencies(ns.translate(dependencies))
                 .computeStatus();
     }
 

@@ -1,6 +1,6 @@
 {
     "type": "gitlabBuildAutomation",
-    "builder":  { "type": "build:gitlabPipelineGenerator" },
+    "builderDescription":  { "type": "build:gitlabPipelineGenerator" },
     "dependencies": {
         "first": "value",
         "second": { "type": "unknown"}
