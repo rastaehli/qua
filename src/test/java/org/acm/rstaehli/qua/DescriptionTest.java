@@ -19,7 +19,6 @@ public class DescriptionTest {
         repo = new FileBasedRepository("src/test/resources/descriptionCases/");
 //        repo.advertise(JvmObjectBuilder(Class cls, List<Class> constructorArgTypes, List<Object> ));
         serializer = new Serializer();
-        serializer.setParentRepo(repo);
     }
 
     @Test

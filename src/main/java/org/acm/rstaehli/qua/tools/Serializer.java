@@ -2,15 +2,11 @@ package org.acm.rstaehli.qua.tools;
 
 import com.google.gson.Gson;
 import org.acm.rstaehli.qua.Description;
-import org.acm.rstaehli.qua.Repository;
-import org.acm.rstaehli.qua.exceptions.NoImplementationFound;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Description is a meta object to reflect on and manage the implementation of a service.
@@ -24,50 +20,102 @@ import java.util.Map;
  */
 public class Serializer {
 
-    private static Repository parentRepo;  // this Serializer responsible for resolving inheritance
-
-    public Description descriptionFromJsonFile(String path) throws FileNotFoundException, NoImplementationFound {
-        return descriptionFromJsonFile(path, parentRepo);
+    public Description descriptionFromJsonFile(String directoryPath, String name) throws FileNotFoundException {
+        Map<String,Object> jsonMap = mapFromJsonFile(directoryPath, name);
+        return new Description(jsonMap);
     }
 
-    /**
-     * Client may set the repo where parent descriptions are found.
-     * @param r
-     */
-    public void setParentRepo(Repository r) {
-        parentRepo = r;
-    }
+    public Map<String,Object> mapFromJsonFile(String directoryPath, String name) throws FileNotFoundException {
+        Map<String,Object> jsonMap = new Gson().fromJson(new FileReader(Paths.get(directoryPath + name + ".json").toFile()), Map.class);
 
-    public Description descriptionFromJsonFile(String path, Repository repo) throws FileNotFoundException, NoImplementationFound {
-        Map<String,Object> map = new Gson().fromJson(new FileReader(Paths.get(path).toFile()), Map.class);
-        Map<String,String> namespaces = getNamespaces(map);
-        replaceAliasesWithNamespaceTranslations(map, namespaces);
-
-        Description desc = new Description(map);
-        if (map.containsKey("parents")) {
-            List<String> parentNames = (List<String>)map.get("parents");
-            for (String name: parentNames) {
-                Description parent = repo.implementationByName(name);
-                desc.inheritFrom(parent);
+        if (jsonMap.containsKey("parents")) {
+            List<String> parentNames = (List<String>)jsonMap.get("parents");
+            for (String parent: parentNames) {
+                Map<String,Object> mapParent = mapFromJsonFile(directoryPath, parent);
+                inheritFrom(mapParent, jsonMap);
             }
         }
-        return desc;
+
+        // Json file syntax allows "namespaceAliases" field to define aliases used to shorten names
+        // Since these can be inherited, must first get parent JSON maps and collect alias definitions
+        // so we can translateNames them wherever they occur.
+        Map<String,String> namespaces = getNamespaces(jsonMap);
+        translateNames(jsonMap, namespaces);
+        return jsonMap;
     }
 
-    private void replaceAliasesWithNamespaceTranslations(Map<String,Object> map, Map<String, String> namespaces) {
+    private void inheritFrom(Map<String,Object> parent, Map<String, Object> child) {
+        List<String> fields = Arrays.asList("name", "type", "builderDescription", "serviceObject");
+        for (String fieldName: fields) {
+            inherit(fieldName, parent, child);
+        }
+        List<String> mapFields = Arrays.asList("properties", "dependencies", "namespaces");
+        for (String mapName: mapFields) {
+            inheritMappings(mapName, parent, child);
+        }
+    }
+
+    public void inherit(String key, Map<String,Object> parent, Map<String, Object> child) {
+        if (!child.containsKey(key) && parent.containsKey(key)) {
+            child.put(key, parent.get(key));
+        }
+    }
+
+    public void inheritMappings(String mapName, Map<String,Object> parent, Map<String, Object> child) {
+            if (parent.containsKey(mapName)) {
+                Map<String,Object> parentMap = (Map<String,Object>)parent.get(mapName);
+                if (!child.containsKey(mapName)) {
+                    child.put(mapName, new HashMap<String, Object>());
+                }
+                Map<String,Object> childMap = (Map<String,Object>)child.get(mapName);
+                for (String key: parentMap.keySet()) {
+                    if (!childMap.containsKey(key)) {
+                        childMap.put(key,parentMap.get(key));
+                    }
+                }
+            }
+    }
+
+    private void translateNames(Map<String,Object> map, Map<String, String> namespaces) {
         for (String key: map.keySet()) {
             Object o = map.get(key);
             if (o instanceof String) {
-                String s = (String)o;
-                int aliasEnd = s.indexOf(':');
-                if (aliasEnd > 0) {
-                    String alias = s.substring(0,aliasEnd);
-                    String translation = namespaces.get(alias);
-                    if (translation != null) {
-                        // replace original value with translation substituted for alias
-                        map.put(key, translation + s.substring(aliasEnd + 1,s.length()));
-                    }
+                String t = translateNames((String)o, namespaces);
+                if (t != null) {
+                    map.put(key, t);
                 }
+            } else if (o instanceof Map<?,?>) {
+                translateNames((Map<String,Object>)o, namespaces);
+            } else if (o instanceof ArrayList<?>) {
+                translateNames((ArrayList<Object>)o, namespaces);
+            }
+        }
+    }
+
+    private String translateNames(String value, Map<String, String> namespaces) {
+        int aliasEnd = value.indexOf(':');
+        if (aliasEnd > 0) {
+            String alias = value.substring(0, aliasEnd);
+            String translation = namespaces.get(alias);
+            if (translation != null) {
+                return translation + value.substring(aliasEnd + 1, value.length());
+            }
+        }
+        return null;
+    }
+
+    private void translateNames(ArrayList<Object> list, Map<String, String> namespaces) {
+        for (int i=0; i<list.size(); i++) {
+            Object o = list.get(i);
+            if (o instanceof String) {
+                String t = translateNames((String)o, namespaces);
+                if (t != null) {
+                    list.set(i, t);
+                }
+            } else if (o instanceof Map<?,?>) {
+                translateNames((Map<String,Object>)o, namespaces);
+            } else if (o instanceof ArrayList<?>) {
+                translateNames((ArrayList<Object>)o, namespaces);
             }
         }
     }

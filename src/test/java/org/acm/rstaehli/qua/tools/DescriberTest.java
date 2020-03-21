@@ -22,7 +22,7 @@ public class DescriberTest {
     }
 
     @Test
-    public void test_namedService() {
+    public void test_namedService() throws NoImplementationFound {
         Map<String,Object> map = new HashMap<String,Object>();
         description = describer.namedService("noType", map);
         assertTrue(description.isActive());

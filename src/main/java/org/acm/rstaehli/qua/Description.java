@@ -123,32 +123,6 @@ public class Description implements Behavior, Plan, Access, Construction {
         return map;
     }
 
-    public void inheritFrom(Description parent) {
-        if (name == null & parent.name != null) {
-            name = parent.name;
-        }
-        if (type == null || type.equals(UNKNOWN_TYPE) & parent.type != null) {
-            type = parent.type;
-        }
-        if (builderDescription == null & parent.builderDescription != null) {
-            builderDescription = parent.builderDescription;
-        }
-        if (serviceObject == null & parent.serviceObject != null) {
-            serviceObject = parent.serviceObject;
-        }
-        for (String name: parent.properties.keySet()) {
-            if (!properties.containsKey(name)) {
-                properties.put(name, parent.properties.get(name));
-            }
-        }
-        for (String name: parent.dependencies.keySet()) {
-            if (!dependencies.containsKey(name)) {
-                dependencies.put(name, parent.dependencies.get(name));
-            }
-        }
-        computeStatus();
-    }
-
     @Override
     public Description setName(String n) {
         name = n;
@@ -227,7 +201,15 @@ public class Description implements Behavior, Plan, Access, Construction {
     }
 
     @Override
-    public Object service() {
+    public Object service() throws NoImplementationFound {
+        return service(null);
+    }
+
+    @Override
+    public Object service(Repository repo) throws NoImplementationFound {
+        if (!isActive()) {
+            this.activate(repo);
+        }
         return serviceObject;
     }
 
@@ -236,7 +218,7 @@ public class Description implements Behavior, Plan, Access, Construction {
         return interfaces;
     }
 
-    public Builder builder() {
+    public Builder builder() throws NoImplementationFound {
         return (Builder)builderDescription.service();
     }
 
@@ -315,6 +297,9 @@ public class Description implements Behavior, Plan, Access, Construction {
         builderDescription = impl.builderDescription;
         dependencies = impl.dependencies;
         status = impl.status;
+        if (!builderDescription.isPlanned()) {
+            builderDescription.plan(repo);
+        }
         for (Object o: dependencies.values()) {
             if (o instanceof Description) {
                 Description d = (Description)o;
@@ -342,6 +327,9 @@ public class Description implements Behavior, Plan, Access, Construction {
         if (!isPlanned()) {
             plan(repo);
         }
+        if (!builderDescription.isProvisioned()) {
+            builderDescription.provision(repo);
+        }
         for (Object o: dependencies.values()) {
             if (o instanceof Description) {
                 Description d = (Description)o;
@@ -366,6 +354,9 @@ public class Description implements Behavior, Plan, Access, Construction {
         }
         if (!isProvisioned()) {
             provision(repo);
+        }
+        if (!builderDescription.isAssembled()) {
+            builderDescription.assemble(repo);
         }
         builder().assemble(this);
         status = ASSEMBLED;

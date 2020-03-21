@@ -29,7 +29,7 @@ public class FileBasedRepository extends AbstractRepository {
 
     public Description implementationByName(String name) throws NoImplementationFound {
         try {
-            return serializer.descriptionFromJsonFile(fileDirectoryPath + name + ".json", this);
+            return serializer.descriptionFromJsonFile(fileDirectoryPath, name);
         } catch (FileNotFoundException e) {
             return cacheRepository.implementationByName(name);
         }

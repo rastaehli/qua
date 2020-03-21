@@ -21,7 +21,6 @@ public class SerializerTest {
     public void setUp() throws IOException {
         repo = new FileBasedRepository("src/test/resources/descriptionCases/");
         serializer = new Serializer();
-        serializer.setParentRepo(repo);
     }
 
     @Test
