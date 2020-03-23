@@ -2,10 +2,7 @@ package org.acm.rstaehli.qua;
 
 import org.acm.rstaehli.qua.exceptions.NoImplementationFound;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Description is a meta object to reflect on and manage the implementation of a service.
@@ -49,7 +46,8 @@ public class Description implements Behavior, Plan, Access, Construction {
     }
 
     public Description() {
-
+        this.properties = new HashMap<>();
+        this.dependencies = new HashMap<>();
     }
 
     public Description computeStatus() {
@@ -120,6 +118,16 @@ public class Description implements Behavior, Plan, Access, Construction {
                 Map<String, Object> translatedValue = translateDescriptions((Map<String, Object>)value);
                 Description desc = new Description(translatedValue);
                 map.put(key, desc);
+            } else if (value instanceof List) {
+                List<Object> newList = new ArrayList();
+                for (Object o: (List)value) {
+                    if (o instanceof Map) {
+                        newList.add( new Description((Map<String, Object>)o));
+                    } else {
+                        newList.add(o);
+                    }
+                }
+                map.put(key, newList);  // replace old list with Descriptions from Maps
             }
         }
         return map;
@@ -221,6 +229,9 @@ public class Description implements Behavior, Plan, Access, Construction {
     }
 
     public Builder builder() throws NoImplementationFound {
+        if (builderDescription == null) {
+            throw new NoImplementationFound("for builderDescription");
+        }
         return (Builder)builderDescription.service();
     }
 
@@ -310,7 +321,7 @@ public class Description implements Behavior, Plan, Access, Construction {
 
         copyFrom(impl);
 
-        if (!builderDescription.isPlanned()) {
+        if (builderDescription != null && !builderDescription.isPlanned()) {
             builderDescription.plan(repo);
         }
         for (Object o: dependencies.values()) {
@@ -330,7 +341,7 @@ public class Description implements Behavior, Plan, Access, Construction {
         if (this.name == null && impl.name != null) {
             this.name = impl.name;
         }
-        if (this.type == null && impl.type != null) {
+        if ((this.type == null || this.type.equals(UNKNOWN_TYPE)) && impl.type != null) {
             this.type = impl.type;
         }
         if (this.builderDescription == null && impl.builderDescription != null) {
@@ -372,7 +383,7 @@ public class Description implements Behavior, Plan, Access, Construction {
             return this;
         }
         if (!isPlanned()) {
-            plan(repo);
+            return plan(repo).provision(repo);
         }
         if (builderDescription != null && !builderDescription.isProvisioned()) {
             builderDescription.provision(repo);
@@ -400,9 +411,9 @@ public class Description implements Behavior, Plan, Access, Construction {
             return this;
         }
         if (!isProvisioned()) {
-            provision(repo);
+            return provision(repo).assemble(repo);
         }
-        if (!builderDescription.isAssembled()) {
+        if (builderDescription != null && !builderDescription.isAssembled()) {
             builderDescription.assemble(repo);
         }
         builder().assemble(this);
@@ -421,7 +432,7 @@ public class Description implements Behavior, Plan, Access, Construction {
             return this;  // already assembled and active
         }
         if (!isAssembled()) {
-            assemble(repo);
+            return assemble(repo).activate(repo);
         }
         builder().start(this);
         status = ACTIVE;
