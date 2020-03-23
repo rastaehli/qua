@@ -47,16 +47,25 @@ public class InMemoryRepository extends AbstractRepository {
 
     public Description implementationByName(String name) throws NoImplementationFound {
         List<Description> matches = nameMap.get(name);
+        if (matches == null || matches.size() < 1) {
+            throw new NoImplementationFound("no matches for name: " + name);
+        }
         return firstOf(matches);
     }
 
     public Description implementationByType(String type) throws NoImplementationFound {
         List<Description> matches = typeMap.get(type);
+        if (matches == null || matches.size() < 1) {
+            throw new NoImplementationFound("no matches for type: " + type);
+        }
         return firstOf(matches);
     }
 
     public Description implementationByType(String type, Map<String,Object> requiredProperties) throws NoImplementationFound {
         List<Description> matches = typeMap.get(type);
+        if (matches == null || matches.size() < 1) {
+            throw new NoImplementationFound("no matches for type: " + type);
+        }
         return firstWithProperties(matches, requiredProperties);
     }
 

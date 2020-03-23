@@ -10,7 +10,7 @@ public abstract class AbstractRepository implements Repository {
 
     Description firstOf(List<Description> list) throws NoImplementationFound {
         if (list == null || list.size() < 1) {
-            throw new NoImplementationFound("empty impls for type");
+            throw new NoImplementationFound("empty impls in firstOf");
         }
         return list.get(0);
     }

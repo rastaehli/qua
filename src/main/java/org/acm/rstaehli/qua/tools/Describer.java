@@ -41,4 +41,8 @@ public class Describer {
     public Description typeAndPlan(String type, Description builder, Map<String,Object> dependencies) {
         return typedPlan(type, new HashMap<>(), builder, dependencies);
     }
+
+    public Description typeAndPlan(String type, Description builder) {
+        return typedPlan(type, new HashMap<>(), builder, new HashMap());
+    }
 }
