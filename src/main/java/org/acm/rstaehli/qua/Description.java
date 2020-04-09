@@ -210,6 +210,18 @@ public class Description implements Behavior, Plan, Access, Construction {
         return properties.containsKey(key);
     }
 
+    public String stringProperty(String key) {
+        return (String)properties.get(key);
+    }
+
+    public long longProperty(String key) {
+        return (long)properties.get(key);
+    }
+
+    public double doubleProperty(String key) {
+        return (double)properties.get(key);
+    }
+
     @Override
     public Object service() throws NoImplementationFound {
         return service(null);

@@ -5,6 +5,9 @@ import org.acm.rstaehli.qua.Description;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Provides convenience methods for constructing Description objects programatically.
+ */
 public class Describer {
 
     private Namespace ns;

@@ -16,7 +16,7 @@ import java.util.Map;
  *      "name": "http://org.acm.rstaehli.qua/model/build/Sort"
  *
  * Use of such namespaces avoids conflicts between a "Sort" defined by
- * edu.mit and a "Sort" defined by gov.nih.
+ * different domains.
  */
 public class Namespace {
 
