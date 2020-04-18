@@ -3,10 +3,7 @@ package org.acm.rstaehli.qua;
 import org.acm.rstaehli.qua.exceptions.NoImplementationFound;
 
 import java.io.FileNotFoundException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class InMemoryRepository extends AbstractRepository {
 
@@ -24,7 +21,7 @@ public class InMemoryRepository extends AbstractRepository {
      */
     public void advertise(Description impl) {
         addMapping(impl.type, impl, typeMap);
-        addMapping(impl.name, impl, nameMap);
+        addMapping(impl.name(), impl, nameMap);
     }
 
     public void addMapping(String key, Description value, Map<String,List<Description>> map) {
@@ -45,28 +42,21 @@ public class InMemoryRepository extends AbstractRepository {
         list.add(value);  // TODO: make this modification thread safe
     }
 
-    public Description implementationByName(String name) throws NoImplementationFound {
+    @Override
+    protected Collection<Description> implementationsByName(String name) {
         List<Description> matches = nameMap.get(name);
         if (matches == null || matches.size() < 1) {
-            throw new NoImplementationFound("no matches for name: " + name);
+            return new ArrayList<>();
         }
-        return firstOf(matches);
+        return matches;
     }
 
-    public Description implementationByType(String type) throws NoImplementationFound {
+    @Override
+    protected Collection<Description> implementationsByType(String type) {
         List<Description> matches = typeMap.get(type);
         if (matches == null || matches.size() < 1) {
-            throw new NoImplementationFound("no matches for type: " + type);
+            return new ArrayList<>();
         }
-        return firstOf(matches);
+        return matches;
     }
-
-    public Description implementationByType(String type, Map<String,Object> requiredProperties) throws NoImplementationFound {
-        List<Description> matches = typeMap.get(type);
-        if (matches == null || matches.size() < 1) {
-            throw new NoImplementationFound("no matches for type: " + type);
-        }
-        return firstWithProperties(matches, requiredProperties);
-    }
-
 }

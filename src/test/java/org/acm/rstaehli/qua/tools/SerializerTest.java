@@ -13,12 +13,14 @@ import java.util.List;
 import static junit.framework.TestCase.assertTrue;
 
 public class SerializerTest {
+    private Describer describe;
     private Description desc;
     private Repository repo;
     private Serializer serializer;
 
     @Before
     public void setUp() throws IOException {
+        describe = new Describer(null);
         repo = new FileBasedRepository("src/test/resources/descriptionCases/");
         serializer = new Serializer();
     }

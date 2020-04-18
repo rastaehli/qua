@@ -1,5 +1,7 @@
 package org.acm.rstaehli.qua.tools;
 
+import org.acm.rstaehli.qua.Description;
+
 import java.util.ArrayList;
 import java.util.Map;
 
@@ -27,12 +29,18 @@ public class Namespace {
     }
 
     public Map<String, Object> translate(Map<String, Object> map) {
+        if (map == null) {
+            return null;
+        }
         for (String key: map.keySet()) {
             Object o = map.get(key);
             if (o instanceof String) {
                 String t = translate((String)o);
                 if (t != o) {
                     map.put(key, t);
+                }
+                if (t.equals(Description.MATCH_ANY)) {
+                    map.put(key, Description.MATCH_ANY);  // use same object ref
                 }
             } else if (o instanceof Map<?,?>) {
                 translate((Map<String,Object>)o);

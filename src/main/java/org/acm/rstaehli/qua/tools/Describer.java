@@ -23,8 +23,17 @@ public class Describer {
                 .computeStatus();
     }
 
+    public Description namedOnly(String name) {
+        return new Description()
+                .setName(ns.translate(name))
+                .computeStatus();
+    }
+
     public Description typedPlan(String type, Map<String,Object> properties,
                                  Description builder, Map<String,Object> dependencies) {
+        if (builder != null && dependencies == null) {
+            dependencies = new HashMap<>();  // ensure builder and dependencies initialized together
+        }
         return new Description()
                 .setType(ns.translate(type))
                 .setProperties(ns.translate(properties))

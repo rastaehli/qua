@@ -17,8 +17,8 @@ import java.util.*;
 public class Description implements Behavior, Plan, Access, Construction {
 
     private static final String UNKNOWN_TYPE = "UNKNOWN_TYPE";
+    public static final Object MATCH_ANY = "http://org.acm.rstaehli.qua/model/build/MATCH_ANY";
 
-    protected String name;
     protected String type;  // name of the behavior of the service
     protected Map<String, Object> properties;  // type variables (guaranteed by the builder)
     protected Description builderDescription = null; // service to build type from dependencies
@@ -35,7 +35,6 @@ public class Description implements Behavior, Plan, Access, Construction {
     public static final int ACTIVE = 5;
 
     public Description(Map<String, Object> jsonObject) {
-        this.name = getField(jsonObject, "name");
         this.type = getField(jsonObject, "type", UNKNOWN_TYPE);
         this.properties = getField(jsonObject, "properties", new HashMap<>());
         this.builderDescription = getField(jsonObject, "builderDescription");
@@ -88,7 +87,7 @@ public class Description implements Behavior, Plan, Access, Construction {
     }
 
     /**
-     * Get concrete type from JsonObject map
+     * Get concrete Description field type from JsonObject map
      * @param jsonObject
      * @param fieldName within jsonObject
      * @param defaultValue to return of field is not set
@@ -100,7 +99,7 @@ public class Description implements Behavior, Plan, Access, Construction {
             Object value = jsonObject.get(fieldName);
             if (value instanceof Map) {
                 if (fieldName.equals("properties") || fieldName.equals("dependencies")) {
-                    value = translateDescriptions((Map<String, Object>)value);
+                    value = mapSupportingNestedDescriptions((Map<String, Object>)value);
                 } else {
                     value = new Description((Map<String, Object>)value);
                 }
@@ -111,12 +110,16 @@ public class Description implements Behavior, Plan, Access, Construction {
         }
     }
 
-    private Map<String, Object> translateDescriptions(Map<String, Object> map) {
+    /**
+     * return a properties or dependencies map, but inspect all key/value pairs to correctly deserialize nested Descriptions
+     * @param map
+     * @return
+     */
+    private Map<String, Object> mapSupportingNestedDescriptions(Map<String, Object> map) {
         for (String key: map.keySet()) {
             Object value = map.get(key);
-            if (value instanceof Map) {  // serialization assumes all maps are Description objects
-                Map<String, Object> translatedValue = translateDescriptions((Map<String, Object>)value);
-                Description desc = new Description(translatedValue);
+            if (value instanceof Map) {  // restriction: all map values in properties or dependencies are Descriptions
+                Description desc = new Description((Map<String,Object>)value);
                 map.put(key, desc);
             } else if (value instanceof List) {
                 List<Object> newList = new ArrayList();
@@ -135,7 +138,7 @@ public class Description implements Behavior, Plan, Access, Construction {
 
     @Override
     public Description setName(String n) {
-        name = n;
+        properties.put("name",n);
         return this;
     }
 
@@ -188,7 +191,7 @@ public class Description implements Behavior, Plan, Access, Construction {
     }
 
     public String name() {
-        return name;
+        return stringProperty("name");
     }
 
     @Override
@@ -222,6 +225,10 @@ public class Description implements Behavior, Plan, Access, Construction {
         return (double)properties.get(key);
     }
 
+    public List<Description> listDescriptionProperty(String key) {
+        return (List<Description>)properties.get(key);
+    }
+
     @Override
     public Object service() throws NoImplementationFound {
         return service(null);
@@ -246,40 +253,6 @@ public class Description implements Behavior, Plan, Access, Construction {
         }
         return (Builder)builderDescription.service();
     }
-
-    @Override
-    public boolean satisfies(Behavior required) {
-        // type must match
-        if (!type.equals(required.type())) {
-            return false;
-        }
-        // must have all goal properties
-        for (String name: required.properties().keySet()) {
-            if (!satisfies(properties.get(name), required.properties().get(name))) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    protected boolean satisfies(Object value1, Object value2) {
-        if (value1 == null ) {
-            return false;
-        }
-        if (value1 instanceof String && value1.equals(value2)) {
-            return true;
-        }
-        if (value1 instanceof Number && value1.equals(value2)) {
-            return true;
-        }
-        if (!(value1 instanceof Description)) {
-            return false;  // we don't support any other types for a property
-        }
-        Description propertyDescription = (Description)value1;
-        Description requiredDescription = (Description)value2;
-        return propertyDescription.satisfies(requiredDescription);
-    }
-
 
     // queries about implementation status
 
@@ -324,19 +297,22 @@ public class Description implements Behavior, Plan, Access, Construction {
         if (isPlanned()) {
             return this;
         }
-        Description impl;
-        try {
-            impl = repo.implementationByName(name);
-        } catch (NoImplementationFound e) {
-            impl = repo.implementationByType(type, properties);
-        }
+        Description impl = repo.bestMatch(this);
 
         copyFrom(impl);
 
         if (builderDescription != null && !builderDescription.isPlanned()) {
             builderDescription.plan(repo);
         }
-        for (Object o: dependencies.values()) {
+        planAll(properties.values(), repo);
+        planAll(dependencies.values(), repo);
+
+        computeStatus();
+        return this;
+    }
+
+    public void planAll(Collection<Object> children, Repository repo) throws NoImplementationFound {
+        for (Object o: children) {
             if (o instanceof Description) {
                 Description d = (Description)o;
                 if (!d.isPlanned()) {
@@ -345,13 +321,10 @@ public class Description implements Behavior, Plan, Access, Construction {
             }
         }
 
-        computeStatus();
-        return this;
     }
-
     public Description copyFrom(Description impl) {
-        if (this.name == null && impl.name != null) {
-            this.name = impl.name;
+        if (this.name() == null && impl.name() != null) {
+            this.setName(impl.name());
         }
         if ((this.type == null || this.type.equals(UNKNOWN_TYPE)) && impl.type != null) {
             this.type = impl.type;
@@ -450,4 +423,50 @@ public class Description implements Behavior, Plan, Access, Construction {
         status = ACTIVE;
         return this;
     }
+
+    @Override
+    public Description matchFor(Description goal) {
+        // type must match
+        if (!type.equals(goal.type())) {
+            return null;
+        }
+        Description copy = new Description().copyFrom(this);
+        // must have all goal properties
+        for (String name: goal.properties().keySet()) {
+            if (copy.hasProperty(name) && copy.properties.get(name) == MATCH_ANY ) {
+                // MATCH_ANY is a promise from the implementation to build with required property value
+                copy.properties.put(name, goal.properties().get(name));
+            } else {
+                Object match = match(copy.properties.get(name), goal.properties().get(name));
+                if (match == null) {
+                    return null;
+                }
+                copy.properties.put(name, match); // match may be mutation that conforms to goal
+            }
+        }
+        return copy;
+    }
+
+    protected Object match(Object value1, Object value2) {
+        if (value1 == null ) {
+            return null;
+        }
+        if (value1 instanceof String && value1.equals(value2)) {
+            return value1;
+        }
+        if (value1 instanceof Number && value1.equals(value2)) {
+            return value1;
+        }
+        if (!(value1 instanceof Description)) {
+            return null;  // we don't support any other types for a property
+        }
+        Description propertyDescription = (Description)value1;
+        Description requiredDescription = (Description)value2;
+        Description matched = propertyDescription.matchFor(requiredDescription);
+        if (matched != null){
+            return matched;
+        }
+        return null;
+    }
+
 }

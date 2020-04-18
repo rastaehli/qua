@@ -11,4 +11,5 @@ public interface Plan {
     Description assemble(Repository repo) throws NoImplementationFound;  // provision first, then assemble
     Description activate() throws NoImplementationFound;  // enable service for all components.  Fails if not assembled.
     Description activate(Repository repo) throws NoImplementationFound;  // assemble first, then enable all
+    Description matchFor(Description goal);  // returns a copy with required properties if possible, else null
 }

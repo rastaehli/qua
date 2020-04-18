@@ -2,9 +2,8 @@ package org.acm.rstaehli.qua;
 
 import org.acm.rstaehli.qua.exceptions.NoImplementationFound;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public abstract class AbstractRepository implements Repository {
 
@@ -15,63 +14,44 @@ public abstract class AbstractRepository implements Repository {
         return list.get(0);
     }
 
-   /**
-     * Find impl from list with all required properties.
-     * @param impls that match type name
-     * @param requiredProperties to match to impl
-     * @return first impl with all required properties
-     * @throws NoImplementationFound
-     */
-    protected Description firstWithProperties(List<Description> impls, Map<String,Object> requiredProperties) throws NoImplementationFound {
-        if (requiredProperties.isEmpty()) {
-            return firstOf(impls);
-        }
-        for (Description impl: impls) {
-            if (hasAll(impl.properties, requiredProperties)) {
-                return impl;
-            }
-        }
-        throw new NoImplementationFound("no impl with all required properties");
-    }
-
-    protected boolean hasAll( Map<String, Object> properties, Map<String, Object> requiredProperties) {
-        List<String> propertyNameMatches = new ArrayList<>();
-        for (String name: requiredProperties.keySet()) {
-            if (has(properties, name, requiredProperties.get(name))) {
-                propertyNameMatches.add(name);
-            }
-        }
-        return propertyNameMatches.size() == properties.keySet().size();
-    }
-
-    protected boolean has(Map<String, Object> properties, String propertyName, Object requiredValue) {
-        Object property = properties.get(propertyName);
-        if (property == null ) {
-            return false;
-        }
-        if (property instanceof String && property.equals(requiredValue)) {
-            return true;
-        }
-        // if not a String, property must be a Description of another component
-        Description propertyDescription = (Description)property;
-        Description requiredDescription = (Description)requiredValue;
-        return propertyDescription.satisfies(requiredDescription);
-    }
-
     @Override
-    public Description implementationMatching(Description desc) throws NoImplementationFound {
+    public List<Description> implementationsMatching(Description desc) {
         if (desc.isActive()) {
-            return desc;    // why would you even call if you already have the implementation?
+            return Arrays.asList(desc);    // why would you even call if you already have the implementation?
         }
-        if (desc.name != null) {
-            try {
-                return implementationByName(desc.name);
-            } catch(NoImplementationFound e) {}
+        List<Description> matches = new ArrayList<>();
+        if (desc.name() != null) {
+            addAllMatches(matches, implementationsByName(desc.name()), desc);
         }
         if (desc.isTyped()) {
-            return implementationByType(desc.type, desc.properties);
-        } else {
-            throw new NoImplementationFound("unknown type");
+            addAllMatches(matches, implementationsByType(desc.type), desc);
         }
+        return matches;
     }
+
+    private void addAllMatches(List<Description> matches, Collection<Description> candidates, Description goal) {
+        for (Description d: candidates) {
+            Description match = d.matchFor(goal);
+            if (match != null) {
+                matches.add(match);
+            }
+        }
+
+    }
+    @Override
+    public Description bestMatch(Description desc) throws NoImplementationFound {
+        return firstOf(implementationsMatching(desc));  // no other criteria for best
+    }
+
+    protected abstract Collection<Description> implementationsByName(String name);
+
+    public Description implementationByName(String name) throws NoImplementationFound {
+        Collection<Description> matches = implementationsByName(name);
+        if (matches.size() < 1) {
+            throw new NoImplementationFound("for name: " + name);
+        }
+        return firstOf((List<Description>) matches);
+    }
+
+    protected abstract Collection<Description> implementationsByType(String type);
 }

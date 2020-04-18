@@ -4,7 +4,7 @@ import org.acm.rstaehli.qua.exceptions.NoImplementationFound;
 import org.acm.rstaehli.qua.tools.Serializer;
 
 import java.io.FileNotFoundException;
-import java.util.Map;
+import java.util.*;
 
 /**
  * read named implementations from file.
@@ -14,7 +14,7 @@ import java.util.Map;
  */
 public class FileBasedRepository extends AbstractRepository {
 
-    private Repository cacheRepository;
+    private AbstractRepository cacheRepository;
     private String fileDirectoryPath;
     private Serializer serializer;
 
@@ -28,22 +28,29 @@ public class FileBasedRepository extends AbstractRepository {
         cacheRepository.advertise(impl);
     }
 
-    public Description implementationByName(String name) throws NoImplementationFound {
+    @Override
+    protected Collection<Description> implementationsByName(String name) {
+        Collection<Description> matches = cacheRepository.implementationsByName(name);
         try {
-            return cacheRepository.implementationByName(name);
-        } catch (NoImplementationFound e) {}
-        try {
-            return serializer.descriptionFromJsonFile(fileDirectoryPath, name);
-        } catch (FileNotFoundException e2) {
-            throw new NoImplementationFound("for name: " + name);
+            matches.add( serializer.descriptionFromJsonFile(fileDirectoryPath, fileNamePart(name) ) );
+        } catch (FileNotFoundException e2) {}  // just return empty collection
+        return matches;
+    }
+
+    private String fileNamePart(String name) {
+        if (name.contains("/")) {  // assume like http://werver/path/filename
+            String[] parts = name.split("/");
+            return parts[parts.length-1];
         }
+        if (name.contains(":")) {  // assume like alias:filename
+            String[] parts = name.split(":");
+            return parts[parts.length-1];
+        }
+        return name;
     }
 
-    public Description implementationByType(String type) throws NoImplementationFound {
-        return cacheRepository.implementationByType(type);
-    }
-
-    public Description implementationByType(String type, Map<String,Object> requiredProperties) throws NoImplementationFound {
-        return cacheRepository.implementationByType(type, requiredProperties);
+    @Override
+    protected Collection<Description> implementationsByType(String type) {
+        return cacheRepository.implementationsByType(type);
     }
 }
