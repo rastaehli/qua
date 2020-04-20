@@ -36,7 +36,7 @@ public class InMemoryRepository extends AbstractRepository {
         }
         for (Description d: list) {
             if (d.equals(value)) {
-                throw new IllegalStateException("key is already in repository: " + key);
+                // TODO: add logging to warn value is already advertised
             }
         }
         list.add(value);  // TODO: make this modification thread safe

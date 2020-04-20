@@ -70,7 +70,7 @@ public class SerializerTest {
         assertTrue((Double)(desc.properties().get("numberProp")) == 1.3 );
     }
 
-    @Test(expected = NoImplementationFound.class)
+    @Test
     public void test_plan_noImplementation() throws NoImplementationFound {
         desc = repo.implementationByName("noImplementation");
         assertTrue(desc.isTyped());

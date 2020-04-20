@@ -32,7 +32,9 @@ public class FileBasedRepository extends AbstractRepository {
     protected Collection<Description> implementationsByName(String name) {
         Collection<Description> matches = cacheRepository.implementationsByName(name);
         try {
-            matches.add( serializer.descriptionFromJsonFile(fileDirectoryPath, fileNamePart(name) ) );
+            Description d = serializer.descriptionFromJsonFile(fileDirectoryPath, fileNamePart(name) );
+            cacheRepository.advertise( d );  // cache to save rereading the file
+            matches.add( d );
         } catch (FileNotFoundException e2) {}  // just return empty collection
         return matches;
     }

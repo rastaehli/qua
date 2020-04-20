@@ -18,7 +18,10 @@ public class Description implements Behavior, Plan, Access, Construction {
 
     private static final String UNKNOWN_TYPE = "UNKNOWN_TYPE";
     public static final Object MATCH_ANY = "http://org.acm.rstaehli.qua/model/build/MATCH_ANY";
-
+    public static final Map<String, Object> ALL_PROPERTIES = new HashMap();  // signal to match any properties map
+    {
+        ALL_PROPERTIES.put("*","*");  // even when this map is copied/translated, these values signal ALL_PROPERTIES
+    }
     protected String type;  // name of the behavior of the service
     protected Map<String, Object> properties;  // type variables (guaranteed by the builder)
     protected Description builderDescription = null; // service to build type from dependencies
@@ -64,16 +67,16 @@ public class Description implements Behavior, Plan, Access, Construction {
         } else {
             status = TYPED;  // still need to check plan status
         }
-        if (builderDescription != null) {
+        if (builderDescription != null && dependencies != null) {
             status = PLANNED;
-        }
-        int leastDependencyStatus = PROVISIONED;  // default value if no dependencies
-        for (Object o: dependencies.values()) {
-            if (o instanceof Description) {
-                leastDependencyStatus = Integer.min(((Description) o).status, leastDependencyStatus);
+            int leastDependencyStatus = PROVISIONED;  // default value if no dependencies
+            for (Object o: dependencies.values()) {
+                if (o instanceof Description) {
+                    leastDependencyStatus = Integer.min(((Description) o).status, leastDependencyStatus);
+                }
             }
+            status = Integer.min(status, leastDependencyStatus);  // lower status if dependencies not provisioned
         }
-        status = Integer.min(status, leastDependencyStatus);
         return this;
     }
 
@@ -348,6 +351,9 @@ public class Description implements Behavior, Plan, Access, Construction {
     }
 
     public void copyMappings(Map<String,Object> source, Map<String, Object> target) {
+        if (source == null) {
+            return;
+        }
         for (String key: source.keySet()) {
             if (!target.containsKey(key)) {
                 target.put(key,source.get(key));
@@ -431,6 +437,10 @@ public class Description implements Behavior, Plan, Access, Construction {
             return null;
         }
         Description copy = new Description().copyFrom(this);
+        if (copy.properties.equals(ALL_PROPERTIES)) { // builder promises to match all properties
+            copy.properties = goal.properties;  // so copy the properties for the builder
+            return copy;
+        }
         // must have all goal properties
         for (String name: goal.properties().keySet()) {
             if (copy.hasProperty(name) && copy.properties.get(name) == MATCH_ANY ) {
@@ -444,7 +454,20 @@ public class Description implements Behavior, Plan, Access, Construction {
                 copy.properties.put(name, match); // match may be mutation that conforms to goal
             }
         }
+        removeObsoleteWildcards(copy.properties);  // unmatched MATCH_ANY values
         return copy;
+    }
+
+    private void removeObsoleteWildcards(Map<String, Object> map) {
+        List<String> obsolete = new ArrayList();
+        for (String key: map.keySet()) {
+            if (map.get(key) == MATCH_ANY) {
+                obsolete.add(key);
+            }
+        }
+        for (String key: obsolete) {
+            map.remove(key);
+        }
     }
 
     protected Object match(Object value1, Object value2) {

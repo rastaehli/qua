@@ -1,5 +1,7 @@
 package org.acm.rstaehli.qua;
 
+import org.acm.rstaehli.qua.exceptions.NoImplementationFound;
+
 public class AbstractPassiveServiceBuilder implements Builder {
     @Override
     public void assemble(Description impl) {
@@ -8,7 +10,11 @@ public class AbstractPassiveServiceBuilder implements Builder {
 
     @Override
     public void start(Description impl) {
-        assemble(impl);  // passive service need only ensure assembly
+        try {
+            impl.assemble();  // passive service need only ensure assembly
+        } catch (NoImplementationFound noImplementationFound) {
+            throw new IllegalStateException("AbstractPassiveServiceBuilder called to start an unimplemented Description.");
+        }
     }
 
     @Override
