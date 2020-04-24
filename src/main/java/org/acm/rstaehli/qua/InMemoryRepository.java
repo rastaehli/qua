@@ -20,8 +20,18 @@ public class InMemoryRepository extends AbstractRepository {
      * @param impl : the description of the implementation.
      */
     public void advertise(Description impl) {
-        addMapping(impl.type, impl, typeMap);
-        addMapping(impl.name(), impl, nameMap);
+        if (!impl.isPlanned()) {
+            throw new IllegalStateException("attempt to advertise description with no implementation");
+        }
+        if (isNamed(impl)) {
+            addMapping(impl.name(), impl, nameMap);  // singletons accessed by name
+        } else {
+            addMapping(impl.type, impl, typeMap);  // generic implementations by type
+        }
+    }
+
+    private boolean isNamed(Description impl) {
+        return impl.name() != null && !impl.name().equals(Description.MATCH_ANY);
     }
 
     public void addMapping(String key, Description value, Map<String,List<Description>> map) {

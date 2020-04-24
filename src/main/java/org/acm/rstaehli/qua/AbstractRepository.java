@@ -9,7 +9,7 @@ public abstract class AbstractRepository implements Repository {
 
     Description firstOf(List<Description> list) throws NoImplementationFound {
         if (list == null || list.size() < 1) {
-            throw new NoImplementationFound("empty impls in firstOf");
+            return null;
         }
         return list.get(0);
     }
@@ -20,9 +20,6 @@ public abstract class AbstractRepository implements Repository {
             return Arrays.asList(desc);    // why would you even call if you already have the implementation?
         }
         List<Description> matches = new ArrayList<>();
-        if (desc.name() != null) {
-            addAllMatches(matches, implementationsByName(desc.name()), desc);
-        }
         if (desc.isTyped()) {
             addAllMatches(matches, implementationsByType(desc.type), desc);
         }

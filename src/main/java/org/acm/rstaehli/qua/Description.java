@@ -1,6 +1,7 @@
 package org.acm.rstaehli.qua;
 
 import org.acm.rstaehli.qua.exceptions.NoImplementationFound;
+import org.apache.log4j.Logger;
 
 import java.util.*;
 
@@ -15,6 +16,8 @@ import java.util.*;
  * When a service is built, it can be accessed by its "service" property.
  */
 public class Description implements Behavior, Plan, Access, Construction {
+
+    private static final Logger logger = Logger.getLogger(Description.class);
 
     private static final String UNKNOWN_TYPE = "UNKNOWN_TYPE";
     public static final Object MATCH_ANY = "http://org.acm.rstaehli.qua/model/build/MATCH_ANY";
@@ -301,6 +304,10 @@ public class Description implements Behavior, Plan, Access, Construction {
             return this;
         }
         Description impl = repo.bestMatch(this);
+        if (impl == null) {
+            logger.error("no implementation for type: " + type);
+            throw new NoImplementationFound("for type: " + type);
+        }
 
         copyFrom(impl);
 
@@ -449,6 +456,9 @@ public class Description implements Behavior, Plan, Access, Construction {
             } else {
                 Object match = match(copy.properties.get(name), goal.properties().get(name));
                 if (match == null) {
+                    logger.debug("property " + name +
+                            " value: " + copy.properties.get(name) +
+                            " does not match goal: " + goal.properties().get(name) + " for type: "+ type );
                     return null;
                 }
                 copy.properties.put(name, match); // match may be mutation that conforms to goal

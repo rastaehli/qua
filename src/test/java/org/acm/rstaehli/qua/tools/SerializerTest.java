@@ -7,6 +7,7 @@ import org.junit.Test;
 import org.acm.rstaehli.qua.Description;
 import org.acm.rstaehli.qua.exceptions.NoImplementationFound;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
 
@@ -15,77 +16,76 @@ import static junit.framework.TestCase.assertTrue;
 public class SerializerTest {
     private Describer describe;
     private Description desc;
-    private Repository repo;
+    private String dir;
     private Serializer serializer;
 
     @Before
     public void setUp() throws IOException {
         describe = new Describer(null);
-        repo = new FileBasedRepository("src/test/resources/descriptionCases/");
+        dir = "src/test/resources/descriptionCases/";
         serializer = new Serializer();
     }
 
-    @Test
-    public void test_json_noType() throws NoImplementationFound {
-        desc = repo.implementationByName("noType");
+    public void test_json_noType() throws FileNotFoundException {
+        desc = serializer.descriptionFromJsonFile(dir, "noType");
     }
 
     @Test
-    public void test_json_typeOnly() throws NoImplementationFound {
-        desc = repo.implementationByName("typeOnly");
+    public void test_json_typeOnly() throws FileNotFoundException {
+        desc = serializer.descriptionFromJsonFile(dir, "typeOnly");
         assertTrue(desc.type() != null);
         assertTrue(!desc.isPlanned());
     }
 
     @Test
-    public void test_json_minimalPlan() throws NoImplementationFound {
-        desc = repo.implementationByName("minimalPlan");
+    public void test_json_minimalPlan() throws FileNotFoundException {
+        desc = serializer.descriptionFromJsonFile(dir, "minimalPlan");
         assertTrue(desc.isPlanned());
     }
 
     @Test
-    public void test_json_planWithDependencies() throws NoImplementationFound {
-        desc = repo.implementationByName("planWithDependencies");
+    public void test_json_planWithDependencies() throws FileNotFoundException {
+        desc = serializer.descriptionFromJsonFile(dir, "planWithDependencies");
         assertTrue(desc.isTyped());
         assertTrue(desc.dependencies().size() > 1);
     }
 
     @Test
-    public void test_json_extendedProperties() throws NoImplementationFound {
-        repo.advertise(repo.implementationByName("namedDescription"));  // parent for extendedProperties
-        desc = repo.implementationByName("extendedProperties");
+    public void test_json_extendedProperties() throws FileNotFoundException  {
+        serializer.descriptionFromJsonFile(dir, "namedDescription");  // parent for extendedProperties
+        desc = serializer.descriptionFromJsonFile(dir, "extendedProperties");
         assertTrue(desc.isTyped());
         assertTrue(desc.properties().get("newProperty1").equals("value1"));
         assertTrue((Double)(desc.properties().get("numberProp")) == 1.3 );
     }
 
     @Test
-    public void test_json_multiLevelInheritance() throws NoImplementationFound {
-        repo.advertise(repo.implementationByName("namedDescription"));  // parent for extendedProperties
-        repo.advertise(repo.implementationByName("extendedProperties")); // parent for multilevelInheritance
-        desc = repo.implementationByName("multiLevelInheritance");
+    public void test_json_multiLevelInheritance() throws FileNotFoundException  {
+        serializer.descriptionFromJsonFile(dir, "namedDescription");  // parent for extendedProperties
+        serializer.descriptionFromJsonFile(dir, "extendedProperties"); // parent for multilevelInheritance
+        desc = serializer.descriptionFromJsonFile(dir, "multiLevelInheritance");
         assertTrue(desc.isTyped());
         assertTrue(desc.properties().get("newProperty2").equals("value2"));
         assertTrue(desc.properties().get("newProperty1").equals("value99"));  // child overrode value
         assertTrue((Double)(desc.properties().get("numberProp")) == 1.3 );
     }
 
-    @Test
-    public void test_plan_noImplementation() throws NoImplementationFound {
-        desc = repo.implementationByName("noImplementation");
+    @Test(expected = NoImplementationFound .class)
+    public void test_plan_noImplementation() throws FileNotFoundException, NoImplementationFound {
+        desc = serializer.descriptionFromJsonFile(dir, "noImplementation");
         assertTrue(desc.isTyped());
-        desc.plan(repo);
+        desc.plan(new FileBasedRepository(dir));
     }
 
     @Test
     public void test_namespaces() throws Exception {
-        desc = repo.implementationByName("namespace1AliasNs1");
+        desc = serializer.descriptionFromJsonFile(dir, "namespace1AliasNs1");
         assertTrue(desc.type().equals("namespace1exampleType"));
     }
 
     @Test
     public void test_json_arrayProperties() throws Exception {
-        desc = repo.implementationByName("arrayProperties");
+        desc = serializer.descriptionFromJsonFile(dir, "arrayProperties");
         assertTrue(desc.isTyped());
         Object o = desc.properties().get("listOfStrings");
         assertTrue(o instanceof List);
@@ -96,7 +96,7 @@ public class SerializerTest {
 
     @Test
     public void test_json_multiParentInheritance() throws Exception {
-        desc = repo.implementationByName("multiParentInheritance");
+        desc = serializer.descriptionFromJsonFile(dir, "multiParentInheritance");
         assertTrue(desc.isTyped());
         assertTrue(desc.type().equals("qua:exampleType"));
         assertTrue(desc.properties().get("childProperty2").equals("value2"));

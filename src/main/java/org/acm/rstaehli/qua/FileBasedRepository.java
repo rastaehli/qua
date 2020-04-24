@@ -2,6 +2,7 @@ package org.acm.rstaehli.qua;
 
 import org.acm.rstaehli.qua.exceptions.NoImplementationFound;
 import org.acm.rstaehli.qua.tools.Serializer;
+import org.apache.log4j.Logger;
 
 import java.io.FileNotFoundException;
 import java.util.*;
@@ -13,6 +14,8 @@ import java.util.*;
  * implementations not from file.
  */
 public class FileBasedRepository extends AbstractRepository {
+
+    private static final Logger logger = Logger.getLogger(Description.class);
 
     private AbstractRepository cacheRepository;
     private String fileDirectoryPath;
@@ -32,10 +35,18 @@ public class FileBasedRepository extends AbstractRepository {
     protected Collection<Description> implementationsByName(String name) {
         Collection<Description> matches = cacheRepository.implementationsByName(name);
         try {
-            Description d = serializer.descriptionFromJsonFile(fileDirectoryPath, fileNamePart(name) );
-            cacheRepository.advertise( d );  // cache to save rereading the file
-            matches.add( d );
-        } catch (FileNotFoundException e2) {}  // just return empty collection
+            Description d = serializer.descriptionFromJsonFile( fileDirectoryPath, fileNamePart(name) );
+            try {
+                d.setName(name);  // ensure name is part of description so advertise does not map by type
+                d.activate(this);  // don't bother to return unless it is full implementation
+                cacheRepository.advertise( d );  // cache named instance to avoid rereading the file
+                matches.add( d );
+            } catch (NoImplementationFound e) {
+                logger.error("could not activate file-based description: " + name + ".  Exception: " + e);
+            }
+        } catch (FileNotFoundException e2) {
+            logger.error("file implementation not found for: " + fileDirectoryPath + fileNamePart(name));
+        }
         return matches;
     }
 
