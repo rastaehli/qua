@@ -5,6 +5,8 @@ import org.acm.rstaehli.qua.Description;
 import java.util.HashMap;
 import java.util.Map;
 
+import static org.acm.rstaehli.qua.Description.UNKNOWN_TYPE;
+
 /**
  * Provides convenience methods for constructing Description objects programatically.
  */
@@ -26,6 +28,7 @@ public class Describer {
     public Description namedOnly(String name) {
         return new Description()
                 .setName(ns.translate(name))
+                .setType(UNKNOWN_TYPE)
                 .computeStatus();
     }
 

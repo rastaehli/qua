@@ -19,7 +19,7 @@ public class Description implements Behavior, Plan, Access, Construction {
 
     private static final Logger logger = Logger.getLogger(Description.class);
 
-    private static final String UNKNOWN_TYPE = "UNKNOWN_TYPE";
+    public static final String UNKNOWN_TYPE = "UNKNOWN_TYPE";
     public static final Object MATCH_ANY = "http://org.acm.rstaehli.qua/model/build/MATCH_ANY";
     public static final Map<String, Object> ALL_PROPERTIES = new HashMap();  // signal to match any properties map
     {
@@ -64,7 +64,7 @@ public class Description implements Behavior, Plan, Access, Construction {
             status = ASSEMBLED;  // built and interfaces identified
             return this;  // don't care if typed or planned
         }
-        if (type.equals(UNKNOWN)) {
+        if (type.equals(UNKNOWN_TYPE)) {
             status = UNKNOWN;
             return this;  // can't plan without type
         } else {
@@ -465,6 +465,7 @@ public class Description implements Behavior, Plan, Access, Construction {
             }
         }
         removeObsoleteWildcards(copy.properties);  // unmatched MATCH_ANY values
+        copy.computeStatus();   // may have changed from copied values
         return copy;
     }
 
