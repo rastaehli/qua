@@ -4,7 +4,7 @@
 <!--  Simula work on QuA ended in 2005.  Should find a new home for this. -->
     <groupId>org.acm.rstaehli</groupId>
     <artifactId>qua</artifactId>
-    <version>1.1-SNAPSHOT</version>
+    <version>1.1</version>
     <packaging>jar</packaging>
 
     <scm>
