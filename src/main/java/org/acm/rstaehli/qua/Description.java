@@ -446,6 +446,7 @@ public class Description implements Behavior, Plan, Access, Construction {
         Description copy = new Description().copyFrom(this);
         if (copy.properties.equals(ALL_PROPERTIES)) { // builder promises to match all properties
             copy.properties = goal.properties;  // so copy the properties for the builder
+            copy.computeStatus();   // may have changed from copied values
             return copy;
         }
         // must have all goal properties
