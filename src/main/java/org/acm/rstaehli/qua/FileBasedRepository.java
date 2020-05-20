@@ -35,7 +35,7 @@ public class FileBasedRepository extends AbstractRepository {
     protected Collection<Description> implementationsByName(String name) {
         Collection<Description> matches = cacheRepository.implementationsByName(name);
         try {
-            Description d = serializer.descriptionFromJsonFile( fileDirectoryPath, fileNamePart(name) );
+            Description d = serializer.descriptionFromJsonFile( fileNamePart(name), fileDirectoryPath );
             try {
                 d.setName(name);  // ensure name is part of description so advertise does not map by type
                 d.activate(this);  // don't bother to return unless it is full implementation

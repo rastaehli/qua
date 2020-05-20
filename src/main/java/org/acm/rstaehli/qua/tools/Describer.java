@@ -40,7 +40,7 @@ public class Describer {
         return new Description()
                 .setType(ns.translate(type))
                 .setProperties(ns.translate(properties))
-                .setBuilderDescriptions(builder)
+                .setBuilderDescription(builder)
                 .setDependencies(ns.translate(dependencies))
                 .computeStatus();
     }

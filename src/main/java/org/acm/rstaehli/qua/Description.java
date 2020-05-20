@@ -152,6 +152,7 @@ public class Description implements Behavior, Plan, Access, Construction {
     @Override
     public Description setType(String t) {
         type = t;
+        computeStatus();
         return this;
     }
 
@@ -162,20 +163,23 @@ public class Description implements Behavior, Plan, Access, Construction {
     }
 
     @Override
-    public Description setBuilderDescriptions(Description d) {
+    public Description setBuilderDescription(Description d) {
         builderDescription = d;
+        computeStatus();
         return this;
     }
 
     @Override
     public Description setDependencies(Map<String, Object> d) {
         dependencies = d;
+        computeStatus();
         return this;
     }
 
     @Override
     public Description setServiceObject(Object o) {
         serviceObject = o;
+        computeStatus();
         return this;
     }
 
@@ -233,6 +237,10 @@ public class Description implements Behavior, Plan, Access, Construction {
 
     public List<Description> listDescriptionProperty(String key) {
         return (List<Description>)properties.get(key);
+    }
+
+    public Description descriptionProperty(String key) {
+        return (Description)properties.get(key);
     }
 
     @Override
@@ -357,7 +365,7 @@ public class Description implements Behavior, Plan, Access, Construction {
         return this;
     }
 
-    public void copyMappings(Map<String,Object> source, Map<String, Object> target) {
+    public static void copyMappings(Map<String,Object> source, Map<String, Object> target) {
         if (source == null) {
             return;
         }

@@ -8,7 +8,7 @@ public interface Construction {
     Description setName(String n);  // name this Description
     Description setType(String name);  // name the type of behavior required of serviceObject
     Description setProperties(Map<String, Object> p);  // required properties of this serviceObject
-    Description setBuilderDescriptions(Description d);  // describe how serviceObject is built
+    Description setBuilderDescription(Description d);  // describe how serviceObject is built
     Description setDependencies(Map<String, Object> d);  // objects needed to build
     Description setServiceObject(Object o);  // set reference for the serviceObject
     Description setInterfaces(Map<String, String> i);  // service may have multiple interfaces for binding
