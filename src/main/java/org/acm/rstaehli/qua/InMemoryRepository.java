@@ -20,7 +20,7 @@ public class InMemoryRepository extends AbstractRepository {
         Description sharedContextBuilderServiceDesc = describe.namedService("qua:list", new ListBuilder(this));
         advertise(describe.typedPlan("qua:list", ListBuilder.matchProperties(), sharedContextBuilderServiceDesc, null));
 
-        Description stringMapBuilderDesc = describe.namedService( "gen:stringMap", new StringMapBuilder());
+        Description stringMapBuilderDesc = describe.namedService( "qua:stringMap", new StringMapBuilder());
         advertise(describe.typedPlan("qua:stringMap", ALL_PROPERTIES, stringMapBuilderDesc, null));
     }
 

@@ -68,10 +68,11 @@ public abstract class AbstractRepository implements Repository {
 
     @Override
     public Description description(String type, Map<String, Object> properties) {
-        Description desc = new Description(type);
-        desc.properties = properties;
-        desc.computeStatus();
-        return desc;
+        return describe.typeAndProperties(type, properties);
+    }
+
+    public String name(String aliasedName) {
+        return describe.namedOnly(aliasedName).name();
     }
 
 }

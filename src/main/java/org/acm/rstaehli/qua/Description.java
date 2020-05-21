@@ -429,6 +429,12 @@ public class Description implements Behavior, Plan, Access, Construction {
         return this;
     }
 
+    public Description disAssemble(Repository repo) {
+        this.serviceObject = null;
+        computeStatus();
+        return this;
+    }
+
     @Override
     public Description activate() throws NoImplementationFound {
         return activate(null);

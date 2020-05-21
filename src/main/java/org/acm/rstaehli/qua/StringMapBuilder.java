@@ -24,7 +24,7 @@ public class StringMapBuilder extends AbstractPassiveServiceBuilder {
 
     public static Description newMapDescription(Repository repo) {
         try {
-            return repo.bestMatch(repo.description("gen:stringMap", new HashMap<>()));
+            return repo.bestMatch(repo.description("qua:stringMap", new HashMap<>()));
         } catch (NoImplementationFound noImplementationFound) {
             noImplementationFound.printStackTrace();  // TODO: handle or avoid this possible exception
         }
