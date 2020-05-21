@@ -1,0 +1,19 @@
+{
+  "parents": [
+    "qua-parent"
+  ],
+  "type": "qua:list",
+  "properties": {
+    "itemIdProperty": "listName",
+    "sharedDescription": {
+      "type": "qua:stringMap",
+      "properties": {
+        "prop1": "1",
+        "prop2": "2"
+      }
+    },
+    "itemIds": [
+      "first", "second", "third"
+    ]
+  }
+}

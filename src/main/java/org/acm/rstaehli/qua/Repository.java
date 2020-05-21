@@ -2,6 +2,7 @@ package org.acm.rstaehli.qua;
 
 import org.acm.rstaehli.qua.exceptions.NoImplementationFound;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -10,4 +11,6 @@ public interface Repository {
     List<Description> implementationsMatching(Description desc);
     Description implementationByName(String name) throws NoImplementationFound;
     Description bestMatch(Description desc) throws NoImplementationFound;
+
+    Description description(String type, Map<String, Object> properties);
 }

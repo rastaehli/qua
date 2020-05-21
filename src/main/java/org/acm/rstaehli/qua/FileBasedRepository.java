@@ -22,6 +22,7 @@ public class FileBasedRepository extends AbstractRepository {
     private Serializer serializer;
 
     public FileBasedRepository(String dir) {
+        super();
         cacheRepository = new InMemoryRepository();
         fileDirectoryPath = dir;
         serializer = new Serializer();

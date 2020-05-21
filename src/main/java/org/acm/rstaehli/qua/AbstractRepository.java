@@ -1,11 +1,25 @@
 package org.acm.rstaehli.qua;
 
 import org.acm.rstaehli.qua.exceptions.NoImplementationFound;
+import org.acm.rstaehli.qua.tools.Describer;
 
 import java.util.*;
-import java.util.stream.Collectors;
+
+import static org.acm.rstaehli.qua.Description.ALL_PROPERTIES;
 
 public abstract class AbstractRepository implements Repository {
+
+    public Map<String,String> namespaces;
+    public Describer describe;
+
+    public AbstractRepository() {
+
+        // component descriptions require RDF names but we can use short aliases for long prefixes to make
+        // serializations more readable.
+        namespaces = new HashMap<>();
+        namespaces.put("qua", "http://org.acm.rstaehli/qua/");
+        describe = new Describer(namespaces);
+    }
 
     Description firstOf(List<Description> list) throws NoImplementationFound {
         if (list == null || list.size() < 1) {
@@ -51,4 +65,13 @@ public abstract class AbstractRepository implements Repository {
     }
 
     protected abstract Collection<Description> implementationsByType(String type);
+
+    @Override
+    public Description description(String type, Map<String, Object> properties) {
+        Description desc = new Description(type);
+        desc.properties = properties;
+        desc.computeStatus();
+        return desc;
+    }
+
 }

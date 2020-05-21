@@ -5,14 +5,23 @@ import org.acm.rstaehli.qua.exceptions.NoImplementationFound;
 import java.io.FileNotFoundException;
 import java.util.*;
 
+import static org.acm.rstaehli.qua.Description.ALL_PROPERTIES;
+
 public class InMemoryRepository extends AbstractRepository {
 
     private Map<String, List<Description>> typeMap;  // support lookup by type
     private Map<String, List<Description>> nameMap;  // lookup by name
 
     public InMemoryRepository() {
+        super();
         typeMap = new HashMap<>();
         nameMap = new HashMap<>();
+
+        Description sharedContextBuilderServiceDesc = describe.namedService("qua:list", new ListBuilder(this));
+        advertise(describe.typedPlan("qua:list", ListBuilder.matchProperties(), sharedContextBuilderServiceDesc, null));
+
+        Description stringMapBuilderDesc = describe.namedService( "gen:stringMap", new StringMapBuilder());
+        advertise(describe.typedPlan("qua:stringMap", ALL_PROPERTIES, stringMapBuilderDesc, null));
     }
 
     /**

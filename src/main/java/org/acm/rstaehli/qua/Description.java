@@ -86,6 +86,8 @@ public class Description implements Behavior, Plan, Access, Construction {
 
     public Description(String type) {
         this.type = type;
+        this.properties = new HashMap<>();
+        this.computeStatus();
     }
 
     protected  <T> T getField(Map<String,Object> o, String fieldName) {

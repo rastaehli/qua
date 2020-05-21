@@ -1,0 +1,6 @@
+{
+  "doc-type": "qua:json:0.1",
+  "namespaces": {
+    "qua": "http://org.acm.rstaehli/qua/"
+  }
+}

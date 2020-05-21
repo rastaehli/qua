@@ -1,0 +1,63 @@
+{
+  "parents": [
+    "qua-parent"
+  ],
+  "type": "qua:list",
+  "properties": {
+    "itemIdProperty": "itemName",
+    "sharedDescription": {
+      "type": "qua:stringMap",
+      "properties": {
+        "level0prop1": "Level0Val1",
+        "level0prop2": "Level0Val2"
+      }
+    },
+    "childLists": [
+      {
+        "type": "qua:list",
+        "properties": {
+          "sharedDescription": {
+            "type": "qua:stringMap",
+            "properties": {
+              "level1prop1": "Level1List1Val1",
+              "level2prop1": "Level1List1Val2"
+            }
+          },
+          "childLists": [
+            {
+              "type": "qua:list",
+              "properties": {
+                "sharedDescription": {
+                  "type": "qua:stringMap",
+                  "properties": {
+                    "level2prop1": "Level2List1Val1",
+                    "level2prop2": "Level2List1Val2"
+                  }
+                },
+                "itemIds": [
+                  "level2List1Item1",
+                  "level2List1Item2"
+                ]
+              }
+            },
+            {
+              "type": "qua:list",
+              "properties": {
+                "sharedDescription": {
+                  "type": "qua:stringMap",
+                  "properties": {
+                    "level2prop1": "Level2List2Val1",
+                    "level2prop2": "Level2List2Val2"
+                  }
+                },
+                "itemIds": [
+                  "level2List2Item1", "level2List2Item2"
+                ]
+              }
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

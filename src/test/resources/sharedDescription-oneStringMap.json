@@ -1,0 +1,21 @@
+{
+  "parents": [
+    "qua-parent"
+  ],
+  "type": "qua:list",
+  "properties": {
+    "itemIdProperty": "listName",
+    "sharedDescription": {
+      "type": "qua:stringMap",
+      "properties": {
+        "TARGET_HOST": "test1.host.com",
+        "TARGET_USER": "userAbc",
+        "CONFIG_FILE": "application.properties",
+        "USER_PASSWORD": "${SECRET}"
+      }
+    },
+    "itemIds": [
+      "list-A"
+    ]
+  }
+}
