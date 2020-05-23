@@ -35,6 +35,9 @@ public class FileBasedRepository extends AbstractRepository {
     @Override
     protected Collection<Description> implementationsByName(String name) {
         Collection<Description> matches = cacheRepository.implementationsByName(name);
+        if (matches.size() > 0) {
+            return matches;
+        }
         try {
             Description d = serializer.descriptionFromJsonFile( fileNamePart(name), fileDirectoryPath );
             try {
