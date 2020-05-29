@@ -26,32 +26,32 @@ public class SerializerTest {
         serializer = new Serializer();
     }
 
-    public void test_json_noType() throws FileNotFoundException {
+    public void test_json_noType() throws Exception {
         desc = serializer.descriptionFromJsonFile("noType", dir);
     }
 
     @Test
-    public void test_json_typeOnly() throws FileNotFoundException {
+    public void test_json_typeOnly() throws Exception {
         desc = serializer.descriptionFromJsonFile("typeOnly", dir);
         assertTrue(desc.type() != null);
         assertTrue(!desc.isPlanned());
     }
 
     @Test
-    public void test_json_minimalPlan() throws FileNotFoundException {
+    public void test_json_minimalPlan() throws Exception {
         desc = serializer.descriptionFromJsonFile("minimalPlan", dir);
         assertTrue(desc.isPlanned());
     }
 
     @Test
-    public void test_json_planWithDependencies() throws FileNotFoundException {
+    public void test_json_planWithDependencies() throws Exception {
         desc = serializer.descriptionFromJsonFile("planWithDependencies", dir);
         assertTrue(desc.isTyped());
         assertTrue(desc.dependencies().size() > 1);
     }
 
     @Test
-    public void test_json_extendedProperties() throws FileNotFoundException  {
+    public void test_json_extendedProperties() throws Exception  {
         serializer.descriptionFromJsonFile("namedDescription", dir);  // parent for extendedProperties
         desc = serializer.descriptionFromJsonFile("extendedProperties", dir);
         assertTrue(desc.isTyped());
@@ -60,7 +60,7 @@ public class SerializerTest {
     }
 
     @Test
-    public void test_json_multiLevelInheritance() throws FileNotFoundException  {
+    public void test_json_multiLevelInheritance() throws Exception  {
         serializer.descriptionFromJsonFile("namedDescription", dir);  // parent for extendedProperties
         serializer.descriptionFromJsonFile("extendedProperties", dir); // parent for multilevelInheritance
         desc = serializer.descriptionFromJsonFile("multiLevelInheritance", dir);
@@ -71,7 +71,7 @@ public class SerializerTest {
     }
 
     @Test(expected = NoImplementationFound .class)
-    public void test_plan_noImplementation() throws FileNotFoundException, NoImplementationFound {
+    public void test_plan_noImplementation() throws Exception {
         desc = serializer.descriptionFromJsonFile("noImplementation", dir);
         assertTrue(desc.isTyped());
         desc.plan(new FileBasedRepository(dir));

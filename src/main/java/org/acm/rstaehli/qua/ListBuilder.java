@@ -56,7 +56,12 @@ public class ListBuilder extends AbstractPassiveServiceBuilder {
 
     public List<Description> items(Description list) {
         if (list.hasProperty(ITEMS)) {
-            return list.listDescriptionProperty(ITEMS);
+            List<Description> itemsList = list.listDescriptionProperty(ITEMS);
+            if (itemsList.size() > 0 && itemsList.get(0) instanceof Description) {
+                return list.listDescriptionProperty(ITEMS);
+            } else {
+                throw new IllegalArgumentException("items in Description list do not have type Description");
+            }
         }
         return EMPTY_DESCRIPTION_LIST;
     }
@@ -140,6 +145,14 @@ public class ListBuilder extends AbstractPassiveServiceBuilder {
                 Description targetDesc = (Description)target.get(key);
                 if (sourceDesc.type().equals(targetDesc.type())) {
                     copyMappingsRecursively(sourceDesc.properties(), targetDesc.properties());
+                }
+            } else if (target.get(key) instanceof List && source.get(key) instanceof List) {
+                List<Object> sourceList = (List)source.get(key);
+                List<Object> targetList = (List)target.get(key);
+                for (Object o: sourceList) {
+                    if (!targetList.contains(o)) {
+                        targetList.add(o);
+                    }
                 }
             }
         }

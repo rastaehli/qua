@@ -48,8 +48,8 @@ public class FileBasedRepository extends AbstractRepository {
             } catch (NoImplementationFound e) {
                 logger.error("could not activate file-based description: " + name + ".  Exception: " + e);
             }
-        } catch (FileNotFoundException e2) {
-            logger.info("file implementation not found for: " + fileDirectoryPath + fileNamePart(name));
+        } catch (Exception e2) {
+            logger.info("exception reading description from file: " + fileDirectoryPath + fileNamePart(name));
         }
         return matches;
     }

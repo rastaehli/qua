@@ -19,7 +19,7 @@ public class StringMapBuilderTest {
         repo = new FileBasedRepository("src/main/test/resources/");
     }
 
-    private Description readDescFromFile( String filename, String ... directory) throws FileNotFoundException {
+    private Description readDescFromFile( String filename, String ... directory) throws Exception {
         return new Serializer().descriptionFromJsonFile(filename, directory);
     }
 

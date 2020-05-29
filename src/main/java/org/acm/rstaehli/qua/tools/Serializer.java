@@ -6,6 +6,7 @@ import org.apache.log4j.Logger;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 
@@ -22,27 +23,37 @@ import java.util.*;
 public class Serializer {
     private static final Logger logger = Logger.getLogger(Serializer.class);
 
-    public Description descriptionFromJsonFile(String name, String ... directoryPath) throws FileNotFoundException {
+    public Description descriptionFromJsonFile(String name, String ... directoryPath) throws Exception {
         Map<String,Object> jsonMap = mapFromJsonFile(name, directoryPath);
         return new Description(jsonMap);
     }
 
-    public Map<String,Object> mapFromJsonFile(String name, String ... directoryPath) throws FileNotFoundException {
-        Map<String,Object> jsonMap = null;
+    public Map<String,Object> mapFromJsonFile(String name, String ... directoryPath) throws Exception {
+       String fileName = null;
+       FileReader input = null;
+       Map<String,Object> jsonMap = null;
         for (int i=0; i<directoryPath.length; i++) {
             String path = directoryPath[i];
+            if (path.length() > 1) {
+                path += path.endsWith("/") ? "" : "/";  // add trailing separator if missing
+            }
+            fileName = path + name + ".json";
             try {
-                if (path.length() > 1) {
-                    path += path.endsWith("/") ? "" : "/";  // add trailing separator if missing
-                }
-                jsonMap = new Gson().fromJson(new FileReader(Paths.get(path + name + ".json").toFile()), Map.class);
+                input = new FileReader(Paths.get(fileName).toFile());
                 break;
-            } catch(Exception e) {
-                logger.info("exception: " + e.getMessage() + " opening file: " + path + name + ".json");
+            } catch (FileNotFoundException e) {
+                logger.info("exception: " + e.getMessage() + " opening file: " + fileName);
+                throw e;
             }
         }
-        if (jsonMap == null) {
-            throw new FileNotFoundException(name);
+        if (input == null) {
+            throw new FileNotFoundException(fileName);
+        }
+        try {
+            jsonMap = new Gson().fromJson(input, Map.class);
+            input.close();
+        } catch(Exception e) {
+            throw new Exception("exception reading json file: " + fileName);
         }
 
         if (jsonMap.containsKey("parents")) {
