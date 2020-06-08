@@ -54,16 +54,6 @@ public abstract class AbstractRepository implements Repository {
         return firstOf(implementationsMatching(desc));  // no other criteria for best
     }
 
-    protected abstract Collection<Description> implementationsByName(String name);
-
-    public Description implementationByName(String name) throws NoImplementationFound {
-        Collection<Description> matches = implementationsByName(name);
-        if (matches.size() < 1) {
-            throw new NoImplementationFound("for name: " + name);
-        }
-        return firstOf((List<Description>) matches);
-    }
-
     protected abstract Collection<Description> implementationsByType(String type);
 
     @Override

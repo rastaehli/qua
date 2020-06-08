@@ -42,8 +42,12 @@ public class Serializer {
                 input = new FileReader(Paths.get(fileName).toFile());
                 break;
             } catch (FileNotFoundException e) {
-                logger.info("exception: " + e.getMessage() + " opening file: " + fileName);
-                throw e;
+                if (i == directoryPath.length) {
+                    logger.error("exception: " + e.getMessage() + " opening file: " + fileName);
+                    throw e;
+                } else {
+                    logger.debug("exception: " + e.getMessage() + " opening file: " + fileName);
+                }
             }
         }
         if (input == null) {

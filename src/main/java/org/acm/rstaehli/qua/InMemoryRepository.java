@@ -32,11 +32,12 @@ public class InMemoryRepository extends AbstractRepository {
         if (!impl.isPlanned()) {
             throw new IllegalStateException("attempt to advertise description with no implementation");
         }
-        if (isNamed(impl)) {
-            addMapping(impl.name(), impl, nameMap);  // singletons accessed by name
-        } else {
-            addMapping(impl.type, impl, typeMap);  // generic implementations by type
-        }
+        addMapping(impl.type, impl, typeMap);
+    }
+
+    public void advertiseByName(Description impl, String name) {
+        addMapping(name, impl, nameMap);
+        advertise(impl);    // also advertise by type
     }
 
     private boolean isNamed(Description impl) {
@@ -62,12 +63,12 @@ public class InMemoryRepository extends AbstractRepository {
     }
 
     @Override
-    protected Collection<Description> implementationsByName(String name) {
+    public Description implementationByName(String name) throws NoImplementationFound {
         List<Description> matches = nameMap.get(name);
         if (matches == null || matches.size() < 1) {
-            return new ArrayList<>();
+            throw new NoImplementationFound("for name: " + name);
         }
-        return matches;
+        return matches.get(0);
     }
 
     @Override

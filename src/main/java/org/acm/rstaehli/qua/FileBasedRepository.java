@@ -33,37 +33,32 @@ public class FileBasedRepository extends AbstractRepository {
     }
 
     @Override
-    protected Collection<Description> implementationsByName(String name) {
-        Collection<Description> matches = cacheRepository.implementationsByName(name);
-        if (matches.size() > 0) {
-            return matches;
-        }
-        try {
-            Description d = serializer.descriptionFromJsonFile( fileNamePart(name), fileDirectoryPath );
-            try {
-                d.setName(name);  // ensure name is part of description so advertise does not map by type
-                d.activate(this);  // don't bother to return unless it is full implementation
-                cacheRepository.advertise( d );  // cache named instance to avoid rereading the file
-                matches.add( d );
-            } catch (NoImplementationFound e) {
-                logger.error("could not activate file-based description: " + name + ".  Exception: " + e);
-            }
-        } catch (Exception e2) {
-            logger.info("exception reading description from file: " + fileDirectoryPath + fileNamePart(name));
-        }
-        return matches;
+    public void advertiseByName(Description impl, String name) {
+        cacheRepository.advertiseByName(impl, name);
     }
 
-    private String fileNamePart(String name) {
-        if (name.contains("/")) {  // assume like http://werver/path/filename
-            String[] parts = name.split("/");
-            return parts[parts.length-1];
+    @Override
+    public Description implementationByName(String name) throws NoImplementationFound {
+        try {
+            cacheRepository.implementationByName(name);
+        } catch(NoImplementationFound e) {
+            logger.debug("no cached implementation for name: " + name);
         }
-        if (name.contains(":")) {  // assume like alias:filename
-            String[] parts = name.split(":");
-            return parts[parts.length-1];
+        Description impl = null;
+        try {
+            impl = serializer.descriptionFromJsonFile( Name.keyPart(name), fileDirectoryPath );
+        } catch (Exception e2) {
+            logger.info("exception reading description from file: " + fileDirectoryPath + Name.keyPart(name));
         }
-        return name;
+        try {
+//            impl.setName(name);  // ensure name is part of description so advertise does not map by type
+            impl.plan(this);  // don't bother to return unless implementation is planned
+            cacheRepository.advertiseByName( impl, name );  // cache named instance to avoid rereading the file
+            return impl;
+        } catch (NoImplementationFound e) {
+            logger.error("could not plan file-based description: " + name + ".  Exception: " + e);
+            throw new NoImplementationFound("could not plan implementation for: " + name);
+        }
     }
 
     @Override
