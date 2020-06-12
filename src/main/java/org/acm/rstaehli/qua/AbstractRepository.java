@@ -61,8 +61,7 @@ public abstract class AbstractRepository implements Repository {
         return describe.typeAndProperties(type, properties);
     }
 
-    public String name(String aliasedName) {
-        return describe.namedOnly(aliasedName).name();
+    public String translate(String alias) {
+        return describe.translate(alias);
     }
-
 }

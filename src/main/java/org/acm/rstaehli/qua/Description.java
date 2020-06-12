@@ -144,12 +144,6 @@ public class Description implements Behavior, Plan, Access, Construction {
         return map;
     }
 
-    @Override
-    public Description setName(String n) {
-        properties.put("name",n);
-        return this;
-    }
-
     // behavior
     @Override
     public Description setType(String t) {
@@ -343,9 +337,6 @@ public class Description implements Behavior, Plan, Access, Construction {
 
     }
     public Description copyFrom(Description impl) {
-        if (this.name() == null && impl.name() != null) {
-            this.setName(impl.name());
-        }
         if ((this.type == null || this.type.equals(UNKNOWN_TYPE)) && impl.type != null) {
             this.type = impl.type;
         }

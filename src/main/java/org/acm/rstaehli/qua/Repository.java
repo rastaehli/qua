@@ -8,7 +8,7 @@ import java.util.Map;
 
 public interface Repository {
     public void advertise(Description impl);
-    public void advertiseByName(Description impl, String name);
+    public void advertiseByName(String name, Description impl);
     List<Description> implementationsMatching(Description desc);
     Description implementationByName(String name) throws NoImplementationFound;
     Description bestMatch(Description desc) throws NoImplementationFound;

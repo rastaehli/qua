@@ -38,7 +38,7 @@ public class DescriptionTest {
 
     @Test
     public void test_matchFor_success() {
-        Description stringDescription = describe.namedService("stringService", "stringValue");
+        Description stringDescription = describe.typedService("stringService", "stringValue");
         Map<String, Object> goalProperties = new HashMap<>();
         goalProperties.put("p1", "v1");
         goalProperties.put("p2", 12345);

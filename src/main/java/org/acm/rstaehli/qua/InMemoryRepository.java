@@ -17,11 +17,15 @@ public class InMemoryRepository extends AbstractRepository {
         typeMap = new HashMap<>();
         nameMap = new HashMap<>();
 
-        Description sharedContextBuilderServiceDesc = describe.namedService("qua:list", new ListBuilder(this));
-        advertise(describe.typedPlan("qua:list", ListBuilder.matchProperties(), sharedContextBuilderServiceDesc, null));
+        advertise(describe.typedPlan(
+                "qua:list", ListBuilder.matchProperties(),
+                describe.typedService("qua:builder", new ListBuilder(this)),
+                null, null));
 
-        Description stringMapBuilderDesc = describe.namedService( "qua:stringMap", new StringMapBuilder());
-        advertise(describe.typedPlan("qua:stringMap", ALL_PROPERTIES, stringMapBuilderDesc, null));
+        advertise(describe.typedPlan(
+                "qua:stringMap", ALL_PROPERTIES,
+                describe.typedService("qua:builder", new StringMapBuilder()),
+                null, null));
     }
 
     /**
@@ -35,7 +39,7 @@ public class InMemoryRepository extends AbstractRepository {
         addMapping(impl.type, impl, typeMap);
     }
 
-    public void advertiseByName(Description impl, String name) {
+    public void advertiseByName(String name, Description impl) {
         addMapping(name, impl, nameMap);
         advertise(impl);    // also advertise by type
     }

@@ -23,9 +23,9 @@ public class DescriberTest {
     @Test
     public void test_namedService() throws NoImplementationFound {
         Map<String,Object> map = new HashMap<String,Object>();
-        description = describer.namedService("noType", map);
+        description = describer.typedService("noType", map);
         assertTrue(description.isActive());
-        assertTrue(description.name().equals("noType"));
+        assertTrue(description.type().equals("noType"));
         Object obj = description.service();
         assertTrue(obj instanceof Map<?,?>);
     }
@@ -53,9 +53,9 @@ public class DescriberTest {
         Map<String,Object> properties = new HashMap<>();
         properties.put("p1", "value1");
         properties.put("p2", "value2");
-        Description builder = describer.namedService("concatenator", new Concatenator());
+        Description builder = describer.typedService("String", new Concatenator());
 
-        description = describer.typedPlan(type, properties, builder, properties);
+        description = describer.typedPlan(type, properties, builder, properties, null);
 
         assertTrue(!description.isActive());  // no active yet
         assertTrue(description.isPlanned());

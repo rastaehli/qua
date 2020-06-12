@@ -5,7 +5,6 @@ import java.util.Map;
 
 public interface Construction {
     // all setters return the modified Description
-    Description setName(String n);  // name this Description
     Description setType(String name);  // name the type of behavior required of serviceObject
     Description setProperties(Map<String, Object> p);  // required properties of this serviceObject
     Description setBuilderDescription(Description d);  // describe how serviceObject is built

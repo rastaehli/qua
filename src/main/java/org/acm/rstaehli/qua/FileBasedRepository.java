@@ -33,14 +33,14 @@ public class FileBasedRepository extends AbstractRepository {
     }
 
     @Override
-    public void advertiseByName(Description impl, String name) {
-        cacheRepository.advertiseByName(impl, name);
+    public void advertiseByName(String name, Description impl) {
+        cacheRepository.advertiseByName(name, impl);
     }
 
     @Override
     public Description implementationByName(String name) throws NoImplementationFound {
         try {
-            cacheRepository.implementationByName(name);
+            return cacheRepository.implementationByName(name);
         } catch(NoImplementationFound e) {
             logger.debug("no cached implementation for name: " + name);
         }
@@ -51,9 +51,8 @@ public class FileBasedRepository extends AbstractRepository {
             logger.info("exception reading description from file: " + fileDirectoryPath + Name.keyPart(name));
         }
         try {
-//            impl.setName(name);  // ensure name is part of description so advertise does not map by type
             impl.plan(this);  // don't bother to return unless implementation is planned
-            cacheRepository.advertiseByName( impl, name );  // cache named instance to avoid rereading the file
+            cacheRepository.advertiseByName(name, impl);  // cache named instance to avoid rereading the file
             return impl;
         } catch (NoImplementationFound e) {
             logger.error("could not plan file-based description: " + name + ".  Exception: " + e);
