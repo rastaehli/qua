@@ -355,6 +355,7 @@ public class Description implements Behavior, Plan, Access, Construction {
         copyMappings(impl.properties, this.properties);
         copyMappings(impl.dependencies, this.dependencies);
 
+        computeStatus();
         return this;
     }
 

@@ -41,7 +41,6 @@ public class InMemoryRepository extends AbstractRepository {
 
     public void advertiseByName(String name, Description impl) {
         addMapping(name, impl, nameMap);
-        advertise(impl);    // also advertise by type
     }
 
     private boolean isNamed(Description impl) {
