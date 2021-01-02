@@ -5,7 +5,7 @@ import org.acm.rstaehli.qua.Description;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.acm.rstaehli.qua.Description.UNKNOWN_TYPE;
+import static org.acm.rstaehli.qua.Behavior.UNKNOWN_TYPE;
 
 /**
  * Provides convenience methods for constructing Description objects programatically.

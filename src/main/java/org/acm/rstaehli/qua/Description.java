@@ -5,44 +5,43 @@ import org.apache.log4j.Logger;
 
 import java.util.*;
 
+import static org.acm.rstaehli.qua.Behavior.UNKNOWN_TYPE;
+
 /**
  * Description is a meta object to reflect on and manage the implementation of a service.
  *
  * - type: names the logical behavior of the service
- * - properties: may contain additional attributes that restrict the type:
- * - plan: describes the implementation of the service.  It may also be executed to build the service.
+ * - properties: any additional attributes that restrict the type
+ *      TODO: explain why properties are not simply part of the plan.  Is it
+ *      that property names are an extension of the type and do not have to
+ *      match plan dependency names?
+ * - plan: how to build an implementation of the service.
  *
  * A service conforms to this description only if the type matches and it hasMatchingValue all the listed properties.
  * When a service is built, it can be accessed by its "service" property.
  */
-public class Description implements Behavior, Plan, Access, Construction {
+public class Description implements Plan, Access {
 
     private static final Logger logger = Logger.getLogger(Description.class);
 
-    public static final String UNKNOWN_TYPE = "UNKNOWN_TYPE";
-    public static final Object MATCH_ANY = "http://org.acm.rstaehli.qua/model/build/MATCH_ANY";
-    public static final Map<String, Object> ALL_PROPERTIES = new HashMap();  // signal to match any properties map
-    {
-        ALL_PROPERTIES.put("*","*");  // even when this map is copied/translated, these values signal ALL_PROPERTIES
-    }
-    protected String type;  // name of the behavior of the service
-    protected Map<String, Object> properties;  // type variables (guaranteed by the builder)
+    protected Behavior behavior;
     protected Description builderDescription = null; // service to build type from dependencies
     protected Map<String, Object> dependencies = new HashMap<>();  // services needed by the builder
     protected Object serviceObject;  // the primary object interface of this description
-    protected Map<String, String> interfaces;  // repositiory names of all interfaces
+    protected Map<String, String> interfaces;  // repository names of all interfaces
     protected int status = UNKNOWN;
 
-    public static final int UNKNOWN = 0;
-    public static final int TYPED = 1;
-    public static final int PLANNED = 2;
-    public static final int PROVISIONED = 3;
-    public static final int ASSEMBLED = 4;
-    public static final int ACTIVE = 5;
+    public static final int UNKNOWN = 0;  // don't know type yet
+    public static final int TYPED = 1;  // know type behavior should conform to
+    public static final int PLANNED = 2;  // know plan for how to build implementation
+    public static final int PROVISIONED = 3; // know all dependencies needed for blueprint, recursively for all plans.
+    public static final int ASSEMBLED = 4; // know interfaces for built component
+    public static final int ACTIVE = 5; // know interfaces will behavior according to type
 
     public Description(Map<String, Object> jsonObject) {
-        this.type = getField(jsonObject, "type", UNKNOWN_TYPE);
-        this.properties = getField(jsonObject, "properties", new HashMap<>());
+        String type = getField(jsonObject, "type", UNKNOWN_TYPE);
+        Map<String, Object> properties = getField(jsonObject, "properties", new HashMap<>());
+        this.behavior = new BehaviorImpl(type, properties);
         this.builderDescription = getField(jsonObject, "builderDescription");
         this.dependencies = getField(jsonObject, "dependencies", new HashMap<>());
         this.serviceObject = getField(jsonObject, "serviceObject");
@@ -51,7 +50,7 @@ public class Description implements Behavior, Plan, Access, Construction {
     }
 
     public Description() {
-        this.properties = new HashMap<>();
+        this.behavior = new BehaviorImpl();
         this.dependencies = new HashMap<>();
     }
 
@@ -64,7 +63,7 @@ public class Description implements Behavior, Plan, Access, Construction {
             status = ASSEMBLED;  // built and interfaces identified
             return this;  // don't care if typed or planned
         }
-        if (type.equals(UNKNOWN_TYPE)) {
+        if (behavior.type().equals(UNKNOWN_TYPE)) {
             status = UNKNOWN;
             return this;  // can't plan without type
         } else {
@@ -85,7 +84,7 @@ public class Description implements Behavior, Plan, Access, Construction {
 
 
     public Description(String type) {
-        this.type = type;
+        this.behavior.setType(type);
     }
 
     protected  <T> T getField(Map<String,Object> o, String fieldName) {
@@ -142,22 +141,22 @@ public class Description implements Behavior, Plan, Access, Construction {
         return map;
     }
 
-    @Override
     public Description setName(String n) {
-        properties.put("name",n);
+        this.behavior.setProperty("name",n);
         return this;
     }
 
-    // behavior
-    @Override
     public Description setType(String t) {
-        type = t;
+        this.behavior.setType(t);
         return this;
     }
 
-    @Override
+    public Behavior behavior() {
+        return this.behavior;
+    }
+
     public Description setProperties(Map<String, Object> p) {
-        properties = p;
+        this.behavior.setProperties(p);
         return this;
     }
 
@@ -173,66 +172,60 @@ public class Description implements Behavior, Plan, Access, Construction {
         return this;
     }
 
-    @Override
+    public Description setProperty(String key, Object value) {
+        this.behavior.setProperty(key, value);
+        return this;
+    }
+
     public Description setServiceObject(Object o) {
         serviceObject = o;
         return this;
     }
 
-    @Override
     public Description setInterfaces(Map<String, String> i) {
         interfaces = i;
         return this;
     }
 
-    @Override
     public Description setStatus(int s) {
         status = s;
         return this;
-    }
-
-    @Override
-    public Description setProperty(String key, Object value) {
-        return null;
     }
 
     public String name() {
         return stringProperty("name");
     }
 
-    @Override
     public String type() {
-        return type;
+        return this.behavior.type();
     }
 
-    @Override
     public Map<String, Object> properties() {
-        return properties;
+        return this.behavior.properties();
     }
 
     public Map<String, Object> dependencies() {
         return dependencies;
     }
 
-    @Override
     public boolean hasProperty(String key) {
-        return properties.containsKey(key);
+        return this.behavior.hasProperty(key);
     }
 
     public String stringProperty(String key) {
-        return (String)properties.get(key);
+        return (String)properties().get(key);
     }
 
     public long longProperty(String key) {
-        return (long)properties.get(key);
+        return (long)properties().get(key);
     }
 
     public double doubleProperty(String key) {
-        return (double)properties.get(key);
+        return (double)properties().get(key);
     }
 
     public List<Description> listDescriptionProperty(String key) {
-        return (List<Description>)properties.get(key);
+        return (List<Description>)properties().get(key);
     }
 
     @Override
@@ -305,8 +298,8 @@ public class Description implements Behavior, Plan, Access, Construction {
         }
         Description impl = repo.bestMatch(this);
         if (impl == null) {
-            logger.error("no implementation for type: " + type);
-            throw new NoImplementationFound("for type: " + type);
+            logger.error("no implementation for type: " + this.behavior.type());
+            throw new NoImplementationFound("for type: " + this.behavior.type());
         }
 
         copyFrom(impl);
@@ -314,7 +307,7 @@ public class Description implements Behavior, Plan, Access, Construction {
         if (builderDescription != null && !builderDescription.isPlanned()) {
             builderDescription.plan(repo);
         }
-        planAll(properties.values(), repo);
+        planAll(behavior.properties().values(), repo);
         planAll(dependencies.values(), repo);
 
         computeStatus();
@@ -332,40 +325,22 @@ public class Description implements Behavior, Plan, Access, Construction {
         }
 
     }
-    public Description copyFrom(Description impl) {
-        if (this.name() == null && impl.name() != null) {
-            this.setName(impl.name());
+
+    // return copy values from the goal Description
+    public Description copyFrom(Description goal) {
+        this.behavior.copyFrom(goal.behavior);
+        if (this.builderDescription == null && goal.builderDescription != null) {
+            this.builderDescription = goal.builderDescription;
         }
-        if ((this.type == null || this.type.equals(UNKNOWN_TYPE)) && impl.type != null) {
-            this.type = impl.type;
+        if (this.serviceObject == null && goal.serviceObject != null) {
+            this.serviceObject = goal.serviceObject;
         }
-        if (this.builderDescription == null && impl.builderDescription != null) {
-            this.builderDescription = impl.builderDescription;
+        if (this.dependencies == null && goal.dependencies != null) {
+            this.dependencies = goal.dependencies;
         }
-        if (this.serviceObject == null && impl.serviceObject != null) {
-            this.serviceObject = impl.serviceObject;
-        }
-        if (this.properties == null && impl.properties != null) {
-            this.properties = impl.properties;
-        }
-        if (this.dependencies == null && impl.dependencies != null) {
-            this.dependencies = impl.dependencies;
-        }
-        copyMappings(impl.properties, this.properties);
-        copyMappings(impl.dependencies, this.dependencies);
+        Mappings.copyMappings(goal.dependencies, this.dependencies);
 
         return this;
-    }
-
-    public void copyMappings(Map<String,Object> source, Map<String, Object> target) {
-        if (source == null) {
-            return;
-        }
-        for (String key: source.keySet()) {
-            if (!target.containsKey(key)) {
-                target.put(key,source.get(key));
-            }
-        }
     }
 
     public Description provision() throws NoImplementationFound {
@@ -439,68 +414,14 @@ public class Description implements Behavior, Plan, Access, Construction {
 
     @Override
     public Description matchFor(Description goal) {
-        // type must match
-        if (!type.equals(goal.type())) {
+        Behavior behaviorMatch = this.behavior.matchFor(goal.behavior());
+        if (behaviorMatch == null) {
             return null;
         }
         Description copy = new Description().copyFrom(this);
-        if (copy.properties.equals(ALL_PROPERTIES)) { // builder promises to match all properties
-            copy.properties = goal.properties;  // so copy the properties for the builder
-            return copy;
-        }
-        // must have all goal properties
-        for (String name: goal.properties().keySet()) {
-            if (copy.hasProperty(name) && copy.properties.get(name) == MATCH_ANY ) {
-                // MATCH_ANY is a promise from the implementation to build with required property value
-                copy.properties.put(name, goal.properties().get(name));
-            } else {
-                Object match = match(copy.properties.get(name), goal.properties().get(name));
-                if (match == null) {
-                    logger.debug("property " + name +
-                            " value: " + copy.properties.get(name) +
-                            " does not match goal: " + goal.properties().get(name) + " for type: "+ type );
-                    return null;
-                }
-                copy.properties.put(name, match); // match may be mutation that conforms to goal
-            }
-        }
-        removeObsoleteWildcards(copy.properties);  // unmatched MATCH_ANY values
+        copy.behavior = behaviorMatch;
         copy.computeStatus();   // may have changed from copied values
         return copy;
-    }
-
-    private void removeObsoleteWildcards(Map<String, Object> map) {
-        List<String> obsolete = new ArrayList();
-        for (String key: map.keySet()) {
-            if (map.get(key) == MATCH_ANY) {
-                obsolete.add(key);
-            }
-        }
-        for (String key: obsolete) {
-            map.remove(key);
-        }
-    }
-
-    protected Object match(Object value1, Object value2) {
-        if (value1 == null ) {
-            return null;
-        }
-        if (value1 instanceof String && value1.equals(value2)) {
-            return value1;
-        }
-        if (value1 instanceof Number && value1.equals(value2)) {
-            return value1;
-        }
-        if (!(value1 instanceof Description)) {
-            return null;  // we don't support any other types for a property
-        }
-        Description propertyDescription = (Description)value1;
-        Description requiredDescription = (Description)value2;
-        Description matched = propertyDescription.matchFor(requiredDescription);
-        if (matched != null){
-            return matched;
-        }
-        return null;
     }
 
 }

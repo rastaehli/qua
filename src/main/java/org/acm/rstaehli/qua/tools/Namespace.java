@@ -1,5 +1,6 @@
 package org.acm.rstaehli.qua.tools;
 
+import org.acm.rstaehli.qua.Behavior;
 import org.acm.rstaehli.qua.Description;
 
 import java.util.ArrayList;
@@ -39,8 +40,8 @@ public class Namespace {
                 if (t != o) {
                     map.put(key, t);
                 }
-                if (t.equals(Description.MATCH_ANY)) {
-                    map.put(key, Description.MATCH_ANY);  // use same object ref
+                if (t.equals(Behavior.MATCH_ANY)) {
+                    map.put(key, Behavior.MATCH_ANY);  // use same object ref
                 }
             } else if (o instanceof Map<?,?>) {
                 translate((Map<String,Object>)o);

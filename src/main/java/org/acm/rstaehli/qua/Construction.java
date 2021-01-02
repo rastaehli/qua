@@ -1,6 +1,5 @@
 package org.acm.rstaehli.qua;
 
-import java.util.HashMap;
 import java.util.Map;
 
 public interface Construction {

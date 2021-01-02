@@ -2,10 +2,16 @@ package org.acm.rstaehli.qua;
 
 import org.acm.rstaehli.qua.exceptions.NoImplementationFound;
 
+import java.util.Map;
+
 public interface Plan {
     boolean isProvisioned();
     boolean isAssembled();
     boolean isActive();
+
+    Description setBuilderDescriptions(Description d);  // describe how serviceObject is built
+    Description setDependencies(Map<String, Object> d);  // objects needed to build
+
     Description provision(Repository repo) throws NoImplementationFound;  // satisfy dependencies from advertised descriptions in repo
     Description assemble() throws NoImplementationFound;  // build with dependencies.  Fails if not provisioned
     Description assemble(Repository repo) throws NoImplementationFound;  // provision first, then assemble

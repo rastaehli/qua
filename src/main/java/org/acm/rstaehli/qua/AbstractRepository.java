@@ -21,7 +21,7 @@ public abstract class AbstractRepository implements Repository {
         }
         List<Description> matches = new ArrayList<>();
         if (desc.isTyped()) {
-            addAllMatches(matches, implementationsByType(desc.type), desc);
+            addAllMatches(matches, implementationsByType(desc.type()), desc);
         }
         return matches;
     }
