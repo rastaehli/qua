@@ -14,15 +14,26 @@ public interface Behavior {
     public static final Object MATCH_ANY = "http://org.acm.rstaehli.qua/model/build/MATCH_ANY";
 
     Behavior setType(String name);  // name the type of behavior required of serviceObject
+    String type();  // the name for the behavior or UNKNOWN_TYPE
+    boolean isTyped(); // type is not UNKNOWN_TYPE
+
     Behavior setProperties(Map<String, Object> p);  // required properties of this serviceObject
     Behavior setProperty(String key, Object value);  // set type property value
-
-    String type();  // the name for the behavior
-    Map<String, Object> properties();  // required properties of this instance of the type
+    Map<String, Object> properties();  // null or required properties of this instance of the type
     boolean hasProperty(String key);
-    boolean isTyped();
 
-    Behavior copyFrom(Behavior behavior);
+    public Object getProperty(String key);
+    // when you know the property type, use these to avoid typecast
+    public String stringProperty(String key);
+    public long longProperty(String key);
+    public double doubleProperty(String key);
+    public Description descriptionProperty(String key);
 
-    Behavior matchFor(Behavior goal);
+    // replace unknowns with specific values from behavior
+    Behavior mergeBehavior(Behavior behavior);
+
+    // replace wildcards with specific values from goal
+    Behavior specializeFor(Behavior goal);
+
+    boolean equals(Behavior other);
 }

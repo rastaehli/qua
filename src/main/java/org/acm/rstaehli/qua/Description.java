@@ -302,7 +302,7 @@ public class Description implements Plan, Access {
             throw new NoImplementationFound("for type: " + this.behavior.type());
         }
 
-        copyFrom(impl);
+        copy(impl);
 
         if (builderDescription != null && !builderDescription.isPlanned()) {
             builderDescription.plan(repo);
@@ -326,9 +326,9 @@ public class Description implements Plan, Access {
 
     }
 
-    // return copy values from the goal Description
-    public Description copyFrom(Description goal) {
-        this.behavior.copyFrom(goal.behavior);
+    // replace unknowns with values from given Description
+    public Description copy(Description goal) {
+        this.behavior.mergeBehavior(goal.behavior);
         if (this.builderDescription == null && goal.builderDescription != null) {
             this.builderDescription = goal.builderDescription;
         }
@@ -338,7 +338,7 @@ public class Description implements Plan, Access {
         if (this.dependencies == null && goal.dependencies != null) {
             this.dependencies = goal.dependencies;
         }
-        Mappings.copyMappings(goal.dependencies, this.dependencies);
+        Mappings.merge(goal.dependencies, this.dependencies);
 
         return this;
     }
@@ -414,11 +414,11 @@ public class Description implements Plan, Access {
 
     @Override
     public Description matchFor(Description goal) {
-        Behavior behaviorMatch = this.behavior.matchFor(goal.behavior());
+        Behavior behaviorMatch = this.behavior.specializeFor(goal.behavior());
         if (behaviorMatch == null) {
             return null;
         }
-        Description copy = new Description().copyFrom(this);
+        Description copy = new Description().copy(this);
         copy.behavior = behaviorMatch;
         copy.computeStatus();   // may have changed from copied values
         return copy;

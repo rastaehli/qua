@@ -2,9 +2,17 @@ package org.acm.rstaehli.qua;
 
 import java.util.Map;
 
+/**
+ * A utility class to support common methods for property and dependency maps.
+ */
 public class Mappings {
 
-    public static void copyMappings(Map<String,Object> source, Map<String, Object> target) {
+    /**
+     * merge in properties from source missing in target
+     * @param source
+     * @param target
+     */
+    public static void merge(Map<String,Object> source, Map<String, Object> target) {
         if (source == null) {
             return;
         }

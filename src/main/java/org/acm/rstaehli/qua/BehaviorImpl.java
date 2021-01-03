@@ -1,6 +1,5 @@
 package org.acm.rstaehli.qua;
 
-import org.acm.rstaehli.qua.exceptions.NoImplementationFound;
 import org.apache.log4j.Logger;
 
 import java.util.*;
@@ -11,11 +10,11 @@ import java.util.*;
 public class BehaviorImpl implements Behavior {
 
     private static final Logger logger = Logger.getLogger(BehaviorImpl.class);
-    public static final Map<String, Object> ALL_PROPERTIES = new HashMap();  // signal to match any properties map
-    {
-        ALL_PROPERTIES.put("*","*");  // even when this map is copied/translated, these values signal ALL_PROPERTIES
-    }
 
+    public static final Map<String, Object> ANY_PROPERTIES = new HashMap();  // signal to match any properties map
+    {
+        ANY_PROPERTIES.put("*","*");  // even when this map is copied/translated, these values signal ANY_PROPERTIES
+    }
 
     protected String type;  // name of the behavior of the service
     protected Map<String, Object> properties;  // type variables (guaranteed by the builder)
@@ -26,11 +25,11 @@ public class BehaviorImpl implements Behavior {
     }
 
     public BehaviorImpl() {
-        this(null, new HashMap<>());
+        this(UNKNOWN_TYPE, null);
     }
 
     public BehaviorImpl(String type) {
-        this(type, new HashMap<>());
+        this(type, null);
     }
 
     public BehaviorImpl setName(String n) {
@@ -38,87 +37,118 @@ public class BehaviorImpl implements Behavior {
         return this;
     }
 
+    @Override
     public BehaviorImpl setType(String t) {
         type = t;
         return this;
     }
 
+    @Override
     public BehaviorImpl setProperties(Map<String, Object> p) {
         properties = p;
         return this;
     }
 
+    @Override
     public BehaviorImpl setProperty(String key, Object value) {
-        return null;
+        if (properties == null) {
+            properties = new HashMap<>();
+        }
+        properties.put(key, value);
+        return this;
     }
 
     public String name() {
         return stringProperty("name");
     }
 
+    @Override
     public String type() {
         return type;
     }
 
+    @Override
     public Map<String, Object> properties() {
         return properties;
     }
 
+    @Override
     public boolean hasProperty(String key) {
+        if (properties == null) {
+            return false;
+        }
         return properties.containsKey(key);
     }
 
+    @Override
+    public Object getProperty(String key) {
+        if (properties == null) {
+            return null;
+        }
+        return properties.get(key);
+    }
+
+    @Override
     public String stringProperty(String key) {
-        return (String)properties.get(key);
+        return (String)getProperty(key);
     }
 
+    @Override
     public long longProperty(String key) {
-        return (long)properties.get(key);
+        return (long)getProperty(key);
     }
 
+    @Override
     public double doubleProperty(String key) {
-        return (double)properties.get(key);
+        return (double)getProperty(key);
+    }
+
+    @Override
+    public Description descriptionProperty(String key) {
+        return null;
     }
 
     public boolean isTyped() {
-        return type != null;
+        return type != UNKNOWN_TYPE;
     }
 
     @Override
-    // return copy merging values from the goal BehaviorImpl
-    public BehaviorImpl copyFrom(Behavior goal) {
-            if ((this.type == null || this.type.equals(Behavior.UNKNOWN_TYPE)) && goal.type() != null) {
-                this.type = goal.type();
-            }
-            if (this.properties == null && goal.properties() != null) {
-                this.properties = goal.properties();
-            }
-            Mappings.copyMappings(goal.properties(), this.properties);
+    public BehaviorImpl mergeBehavior(Behavior behavior) {
+        if ((this.type == null || this.type.equals(Behavior.UNKNOWN_TYPE)) && behavior.type() != null) {
+            this.type = behavior.type();
+        }
+        if (this.properties == null && behavior.properties() != null) {
+            this.properties = behavior.properties();
+        }
+        if (this.properties == ANY_PROPERTIES) {
+            this.properties = behavior.properties();
+        }
+        Mappings.merge(behavior.properties(), this.properties);
 
-            return this;
+        return this;
     }
 
     @Override
-    public Behavior matchFor(Behavior goal) {
+    public Behavior specializeFor(Behavior goal) {
         // type must match
         if (!type.equals(goal.type())) {
             return null;
         }
-        BehaviorImpl copy = new BehaviorImpl().copyFrom(this);
-        if (copy.properties.equals(ALL_PROPERTIES)) { // builder promises to match all properties
-            copy.properties = goal.properties();  // so copy the properties for the builder
+        BehaviorImpl copy = new BehaviorImpl().mergeBehavior(this);
+        if (copy.properties.equals(ANY_PROPERTIES)) { // builder promises to match all properties
+            copy.properties = goal.properties();  // so mergeBehavior the properties for the builder
             return copy;
         }
         // must have all goal properties
         for (String name: goal.properties().keySet()) {
-            if (copy.hasProperty(name) && copy.properties.get(name) == Behavior.MATCH_ANY ) {
+            if (copy.hasProperty(name) && copy.getProperty(name) == Behavior.MATCH_ANY ) {
                 // MATCH_ANY is a promise from the implementation to build with required property value
                 copy.properties.put(name, goal.properties().get(name));
             } else {
-                Object match = match(copy.properties.get(name), goal.properties().get(name));
+                Object match = match(copy.getProperty(name), goal.properties().get(name));
                 if (match == null) {
                     logger.debug("property " + name +
-                            " value: " + copy.properties.get(name) +
+                            " value: " + copy.getProperty(name) +
                             " does not match goal: " + goal.properties().get(name) + " for type: "+ type );
                     return null;
                 }
@@ -161,6 +191,22 @@ public class BehaviorImpl implements Behavior {
             return matched;
         }
         return null;
+    }
+
+    public boolean equals(Behavior other) {
+        if (!(other instanceof BehaviorImpl)) {
+            return false;
+        }
+        BehaviorImpl otherBehaviorImpl = (BehaviorImpl)other;
+        if (!this.type.equals(otherBehaviorImpl.type())) {
+            return false;
+        }
+        if (this.properties != null) {
+            if (!this.properties.equals(otherBehaviorImpl.properties)) {
+                return false;
+            }
+        }
+        return true;
     }
 
 }
