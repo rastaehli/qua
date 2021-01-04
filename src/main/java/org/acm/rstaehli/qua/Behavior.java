@@ -1,12 +1,23 @@
 package org.acm.rstaehli.qua;
 
-import org.acm.rstaehli.qua.exceptions.NoImplementationFound;
-
-import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Interface for just the description of how a service behaves.
+ * Behavior is the description of externally visible behavior of a service in the ideal.
+ *
+ * A service is anything that does work for a client, not only clients that
+ * call on a service interface, but a client that starts the service with the
+ * expectation that the service will work autonomously via interfaces with other
+ * services.
+ *
+ * The ideal is the assumption that the service can react instantly without
+ * cost or loss of accuracy and precision.
+ *
+ * All allowance for limited
+ * precision, cost, and delay are part of the @Quality description.  All
+ * provision for implementing this behavior with the required quality are part
+ * of the @Construction description.  All access to the service is via
+ * the @Interfaces description.
  */
 public interface Behavior {
 
