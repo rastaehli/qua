@@ -1,5 +1,6 @@
 package org.acm.rstaehli.qua;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -21,10 +22,10 @@ import java.util.Map;
  */
 public interface Quality {
 
-    Quality setModel(Description errorModel);  // dimensions for deviation from ideal
+    Quality setErrorDimensions(List<String> errorDimensions);  // dimensions for deviation from ideal
     Quality setAllowances(Map<String, Object> allowances);  // acceptable error values for each dimension
     Quality setUtility(Map<String, Object> utilityFunctions);  // utility function for each dimension
     Quality setRequiredUtility(Float requiredUtility);  // goal aggregate quality for input error estimates.
     Float requiredUtility();
-
+    boolean equals(Quality other);
 }

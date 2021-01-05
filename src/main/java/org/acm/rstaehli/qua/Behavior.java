@@ -1,5 +1,8 @@
 package org.acm.rstaehli.qua;
 
+import sun.security.krb5.internal.crypto.Des;
+
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -47,4 +50,6 @@ public interface Behavior {
     Behavior specializeFor(Behavior goal);
 
     boolean equals(Behavior other);
+
+    List<Description> descriptions();  // Allow planning to access nested Description objects
 }

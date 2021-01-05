@@ -6,6 +6,7 @@ import org.apache.log4j.Logger;
 import java.util.*;
 
 import static org.acm.rstaehli.qua.Behavior.UNKNOWN_TYPE;
+import static org.acm.rstaehli.qua.Lifecycle.*;
 
 /**
  * Description is a meta object to reflect on and manage the implementation of a service.
@@ -20,65 +21,65 @@ import static org.acm.rstaehli.qua.Behavior.UNKNOWN_TYPE;
  * A service conforms to this description only if the type matches and it hasMatchingValue all the listed properties.
  * When a service is built, it can be accessed by its "service" property.
  */
-public class Description implements Plan, Access {
+public class Description {
 
     private static final Logger logger = Logger.getLogger(Description.class);
 
     protected Behavior behavior;
-    protected Description builderDescription = null; // service to build type from dependencies
-    protected Map<String, Object> dependencies = new HashMap<>();  // services needed by the builder
-    protected Object serviceObject;  // the primary object interface of this description
-    protected Map<String, String> interfaces;  // repository names of all interfaces
-    protected int status = UNKNOWN;
+    protected Quality quality;
+    protected Construction construction;
 
-    public static final int UNKNOWN = 0;  // don't know type yet
-    public static final int TYPED = 1;  // know type behavior should conform to
-    public static final int PLANNED = 2;  // know plan for how to build implementation
-    public static final int PROVISIONED = 3; // know all dependencies needed for blueprint, recursively for all plans.
-    public static final int ASSEMBLED = 4; // know interfaces for built component
-    public static final int ACTIVE = 5; // know interfaces will behavior according to type
+//    protected Description builderDescription = null; // service to build type from dependencies
+//    protected Map<String, Object> dependencies = new HashMap<>();  // services needed by the builder
+//    protected Object serviceObject;  // the primary object interface of this description
+//    protected Map<String, String> interfaces;  // repository names of all interfaces
+    protected Lifecycle status = UNKNOWN;
+
 
     public Description(Map<String, Object> jsonObject) {
         String type = getField(jsonObject, "type", UNKNOWN_TYPE);
         Map<String, Object> properties = getField(jsonObject, "properties", new HashMap<>());
         this.behavior = new BehaviorImpl(type, properties);
-        this.builderDescription = getField(jsonObject, "builderDescription");
-        this.dependencies = getField(jsonObject, "dependencies", new HashMap<>());
-        this.serviceObject = getField(jsonObject, "serviceObject");
-        this.interfaces = getField(jsonObject, "interfaces", new HashMap<>());
+
+        Description builderDescription = getField(jsonObject, "builderDescription");
+        HashMap<String, Object> dependencies = getField(jsonObject, "dependencies", new HashMap<>());
+        this.construction = new ConstructionImpl(builderDescription, dependencies);
+
         computeStatus();
     }
 
     public Description() {
         this.behavior = new BehaviorImpl();
-        this.dependencies = new HashMap<>();
+        this.construction = null;
     }
 
     public Description computeStatus() {
-        if (serviceObject != null) {
-            status = ACTIVE;  // if service hasMatchingValue been built
-            return this;  // don't care if typed or planned
+        if (construction.service() != null) {
+            status = ACTIVE;  // construction sets primary service only when active/ready
+            return this;
         }
-        if (interfaces != null && !interfaces.isEmpty()) {
+        if (construction.interfaces() != null && !construction.interfaces().isEmpty()) {
             status = ASSEMBLED;  // built and interfaces identified
             return this;  // don't care if typed or planned
         }
+        // next we want to know if it is constructed, but state of
+        // construction is meaningless without type, so check that first
         if (behavior.type().equals(UNKNOWN_TYPE)) {
             status = UNKNOWN;
             return this;  // can't plan without type
         } else {
-            status = TYPED;  // still need to check plan status
+            status = TYPED;  // still need to check construction status
         }
-        if (builderDescription != null && dependencies != null) {
-            status = PLANNED;
-            int leastDependencyStatus = PROVISIONED;  // default value if no dependencies
-            for (Object o: dependencies.values()) {
-                if (o instanceof Description) {
-                    leastDependencyStatus = Integer.min(((Description) o).status, leastDependencyStatus);
+
+        if (construction != null) {
+            status = PROVISIONED;  // default value if no dependencies
+            for (Description d: construction.descriptions()) {
+                if (!d.isProvisioned()) {
+                    status = PLANNED;   // construction plan exists but need some dependency
                 }
             }
-            status = Integer.min(status, leastDependencyStatus);  // lower status if dependencies not provisioned
         }
+
         return this;
     }
 
@@ -92,7 +93,7 @@ public class Description implements Plan, Access {
     }
 
     /**
-     * Get concrete Description field type from JsonObject map
+     * Get concrete Description field type from Json object map
      * @param jsonObject
      * @param fieldName within jsonObject
      * @param defaultValue to return of field is not set
@@ -160,35 +161,8 @@ public class Description implements Plan, Access {
         return this;
     }
 
-    @Override
-    public Description setBuilderDescriptions(Description d) {
-        builderDescription = d;
-        return this;
-    }
-
-    @Override
-    public Description setDependencies(Map<String, Object> d) {
-        dependencies = d;
-        return this;
-    }
-
     public Description setProperty(String key, Object value) {
         this.behavior.setProperty(key, value);
-        return this;
-    }
-
-    public Description setServiceObject(Object o) {
-        serviceObject = o;
-        return this;
-    }
-
-    public Description setInterfaces(Map<String, String> i) {
-        interfaces = i;
-        return this;
-    }
-
-    public Description setStatus(int s) {
-        status = s;
         return this;
     }
 
@@ -202,10 +176,6 @@ public class Description implements Plan, Access {
 
     public Map<String, Object> properties() {
         return this.behavior.properties();
-    }
-
-    public Map<String, Object> dependencies() {
-        return dependencies;
     }
 
     public boolean hasProperty(String key) {
@@ -228,55 +198,43 @@ public class Description implements Plan, Access {
         return (List<Description>)properties().get(key);
     }
 
-    @Override
+    public Description setConstruction(Construction c) {
+        construction = c;
+        return this;
+    }
+
+    // assumes no repository needed, as in service already active
     public Object service() throws NoImplementationFound {
         return service(null);
     }
 
-    @Override
     public Object service(Repository repo) throws NoImplementationFound {
         if (!isActive()) {
             this.activate(repo);
         }
-        return serviceObject;
-    }
-
-    @Override
-    public Map<String, String> interfaces() {
-        return interfaces;
-    }
-
-    public Builder builder() throws NoImplementationFound {
-        if (builderDescription == null) {
-            throw new NoImplementationFound("for builderDescription");
-        }
-        return (Builder)builderDescription.service();
+        return construction.service();
     }
 
     // queries about implementation status
 
-
     public boolean isTyped() {
-        return status >= TYPED;
+        return status.ordinal() >= TYPED.ordinal();
     }
 
     public boolean isPlanned() {
-        return status >= PLANNED;
+        return status.ordinal() >= PLANNED.ordinal();
     }
 
-    @Override
     public boolean isProvisioned() {
-        return status >= PROVISIONED;
+        return status.ordinal() >= PROVISIONED.ordinal();
     }
 
-    @Override
     public boolean isAssembled() {
-        return status >= ASSEMBLED;
+        return status.ordinal() >= ASSEMBLED.ordinal();
     }
 
-    @Override
     public boolean isActive() {
-        return status >= ACTIVE;
+        return status.ordinal() >= ACTIVE.ordinal();
     }
 
     // operations to change implementation status
@@ -286,10 +244,10 @@ public class Description implements Plan, Access {
     }
 
     /**
-     * find implementations matching name or type/properties and set these attributes
+     * find implementations matching name or behavior and set these attributes.
      * on this description.
-     * @param repo
-     * @return
+     * @param repo has implementation descriptions that may provide the needed plan.
+     * @return this Description updated with construction plan.
      * @throws NoImplementationFound
      */
     public Description plan(Repository repo) throws NoImplementationFound {
@@ -302,44 +260,15 @@ public class Description implements Plan, Access {
             throw new NoImplementationFound("for type: " + this.behavior.type());
         }
 
-        copy(impl);
-
-        if (builderDescription != null && !builderDescription.isPlanned()) {
-            builderDescription.plan(repo);
-        }
-        planAll(behavior.properties().values(), repo);
-        planAll(dependencies.values(), repo);
+        behavior.mergeBehavior(impl.behavior);
+        construction.mergeConstruction(impl.construction);
+        for (Description d: childDescriptions()) {
+            if (!d.isPlanned()) {
+                d.plan(repo);
+            }
+        };
 
         computeStatus();
-        return this;
-    }
-
-    public void planAll(Collection<Object> children, Repository repo) throws NoImplementationFound {
-        for (Object o: children) {
-            if (o instanceof Description) {
-                Description d = (Description)o;
-                if (!d.isPlanned()) {
-                    d.plan(repo);
-                }
-            }
-        }
-
-    }
-
-    // replace unknowns with values from given Description
-    public Description copy(Description goal) {
-        this.behavior.mergeBehavior(goal.behavior);
-        if (this.builderDescription == null && goal.builderDescription != null) {
-            this.builderDescription = goal.builderDescription;
-        }
-        if (this.serviceObject == null && goal.serviceObject != null) {
-            this.serviceObject = goal.serviceObject;
-        }
-        if (this.dependencies == null && goal.dependencies != null) {
-            this.dependencies = goal.dependencies;
-        }
-        Mappings.merge(goal.dependencies, this.dependencies);
-
         return this;
     }
 
@@ -350,7 +279,6 @@ public class Description implements Plan, Access {
     /**
      * discover, provide and/or build all required dependencies
      */
-    @Override
     public Description provision(Repository repo) throws NoImplementationFound {
         if (isProvisioned()) {
             return this;
@@ -358,70 +286,83 @@ public class Description implements Plan, Access {
         if (!isPlanned()) {
             return plan(repo).provision(repo);
         }
-        if (builderDescription != null && !builderDescription.isProvisioned()) {
-            builderDescription.provision(repo);
-        }
-        for (Object o: dependencies.values()) {
-            if (o instanceof Description) {
-                Description d = (Description)o;
-                if (!d.isProvisioned()) {
-                    d.provision(repo);
-                }
+        for (Description d: childDescriptions()) {
+            if (!d.isProvisioned()) {
+                d.provision(repo);
             }
-        }
+        };
         status = PROVISIONED;
         return this;
     }
 
-    @Override
+    private List<Description> childDescriptions() {
+        List<Description> descriptions = behavior.descriptions();
+        descriptions.addAll(construction.descriptions());
+        return descriptions;
+    }
+
     public Description assemble() throws NoImplementationFound {
         return assemble(null);
     }
 
-    @Override
     public Description assemble(Repository repo) throws NoImplementationFound {
         if (isAssembled()) {
             return this;
         }
         if (!isProvisioned()) {
-            return provision(repo).assemble(repo);
+            provision(repo);
         }
-        if (builderDescription != null && !builderDescription.isAssembled()) {
-            builderDescription.assemble(repo);
+        for (Description d: childDescriptions()) {
+            if (!d.isAssembled()) {
+                d.assemble();
+            }
         }
-        builder().assemble(this);
+        construction.builder().assemble(this);
         status = ASSEMBLED;
         return this;
     }
 
-    @Override
     public Description activate() throws NoImplementationFound {
         return activate(null);
     }
 
-    @Override
     public Description activate(Repository repo) throws NoImplementationFound {
         if (isActive()) {
             return this;  // already assembled and active
         }
         if (!isAssembled()) {
-            return assemble(repo).activate(repo);
+            return assemble(repo);
         }
-        builder().start(this);
+        construction.builder().start(this);
         status = ACTIVE;
         return this;
     }
 
-    @Override
+    /**
+     * Attempt to create a copy of this specialized to match the goal.
+     *
+     * @param goal describes behavior iwe are trying to match
+     * @return null or a specialized copy matching goal
+     */
     public Description matchFor(Description goal) {
-        Behavior behaviorMatch = this.behavior.specializeFor(goal.behavior());
-        if (behaviorMatch == null) {
+        Behavior specializedBehavior = this.behavior.specializeFor(goal.behavior());
+        if (specializedBehavior == null) {
             return null;
         }
-        Description copy = new Description().copy(this);
-        copy.behavior = behaviorMatch;
+        Description copy = new Description();
+        copy.behavior = specializedBehavior;
+        copy.quality = this.quality;
+        copy.construction = this.construction;
         copy.computeStatus();   // may have changed from copied values
         return copy;
     }
 
+    public Description setServiceObject(Object obj) {
+        construction.setService(obj);
+        return this;
+    }
+
+    public Map<String, Object> dependencies() {
+        return construction.dependencies();
+    }
 }

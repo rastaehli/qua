@@ -1,5 +1,6 @@
 package org.acm.rstaehli.qua.tools;
 
+import org.acm.rstaehli.qua.ConstructionImpl;
 import org.acm.rstaehli.qua.Description;
 
 import java.util.HashMap;
@@ -40,8 +41,7 @@ public class Describer {
         return new Description()
                 .setType(ns.translate(type))
                 .setProperties(ns.translate(properties))
-                .setBuilderDescriptions(builder)
-                .setDependencies(ns.translate(dependencies))
+                .setConstruction(new ConstructionImpl(builder, ns.translate(dependencies)))
                 .computeStatus();
     }
 

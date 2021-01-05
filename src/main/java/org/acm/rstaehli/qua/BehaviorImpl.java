@@ -3,6 +3,7 @@ package org.acm.rstaehli.qua;
 import org.apache.log4j.Logger;
 
 import java.util.*;
+import java.util.stream.Stream;
 
 /**
  * BehaviorImpl is a simple implementation of @Behavior interface.
@@ -134,29 +135,29 @@ public class BehaviorImpl implements Behavior {
         if (!type.equals(goal.type())) {
             return null;
         }
-        BehaviorImpl copy = new BehaviorImpl().mergeBehavior(this);
-        if (copy.properties.equals(ANY_PROPERTIES)) { // builder promises to match all properties
-            copy.properties = goal.properties();  // so mergeBehavior the properties for the builder
-            return copy;
+        BehaviorImpl specialized = new BehaviorImpl().mergeBehavior(this);
+        if (specialized.properties.equals(ANY_PROPERTIES)) { // builder promises to match all properties
+            specialized.properties = goal.properties();  // so mergeBehavior the properties for the builder
+            return specialized;
         }
         // must have all goal properties
         for (String name: goal.properties().keySet()) {
-            if (copy.hasProperty(name) && copy.getProperty(name) == Behavior.MATCH_ANY ) {
+            if (specialized.hasProperty(name) && specialized.getProperty(name) == Behavior.MATCH_ANY ) {
                 // MATCH_ANY is a promise from the implementation to build with required property value
-                copy.properties.put(name, goal.properties().get(name));
+                specialized.properties.put(name, goal.properties().get(name));
             } else {
-                Object match = match(copy.getProperty(name), goal.properties().get(name));
+                Object match = match(specialized.getProperty(name), goal.properties().get(name));
                 if (match == null) {
                     logger.debug("property " + name +
-                            " value: " + copy.getProperty(name) +
+                            " value: " + specialized.getProperty(name) +
                             " does not match goal: " + goal.properties().get(name) + " for type: "+ type );
                     return null;
                 }
-                copy.properties.put(name, match); // match may be mutation that conforms to goal
+                specialized.properties.put(name, match); // match may be mutation that conforms to goal
             }
         }
-        removeObsoleteWildcards(copy.properties);  // unmatched MATCH_ANY values
-        return copy;
+        removeObsoleteWildcards(specialized.properties);  // unmatched MATCH_ANY values
+        return specialized;
     }
 
     private void removeObsoleteWildcards(Map<String, Object> map) {
@@ -201,12 +202,24 @@ public class BehaviorImpl implements Behavior {
         if (!this.type.equals(otherBehaviorImpl.type())) {
             return false;
         }
-        if (this.properties != null) {
-            if (!this.properties.equals(otherBehaviorImpl.properties)) {
-                return false;
-            }
+        if (this.properties == null || ((BehaviorImpl) other).properties == null) {
+            return false;
+        }
+        if (!this.properties.equals(otherBehaviorImpl.properties)) {
+            return false;
         }
         return true;
+    }
+
+    @Override
+    public List<Description> descriptions() {
+        List<Description> descriptions = new ArrayList<>();
+        for (Object o: properties.values()) {
+            if (o instanceof Description) {
+                descriptions.add((Description) o);
+            }
+        }
+        return descriptions;
     }
 
 }
