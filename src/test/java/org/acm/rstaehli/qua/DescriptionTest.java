@@ -32,8 +32,8 @@ public class DescriptionTest {
     public void test_serviceObject_string() throws NoImplementationFound {
         desc = repo.implementationByName("serviceObjectOnly");
         assertTrue(desc.isActive());
-        assertTrue(desc.serviceObject instanceof String);
-        assertTrue(desc.serviceObject.equals("12345"));
+        assertTrue(desc.service() instanceof String);
+        assertTrue(desc.service().equals("12345"));
     }
 
     @Test

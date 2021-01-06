@@ -118,14 +118,12 @@ public class BehaviorImpl implements Behavior {
         if ((this.type == null || this.type.equals(Behavior.UNKNOWN_TYPE)) && behavior.type() != null) {
             this.type = behavior.type();
         }
-        if (this.properties == null && behavior.properties() != null) {
-            this.properties = behavior.properties();
+        if (behavior.properties() != null) {
+            if (this.properties == null || this.properties == ANY_PROPERTIES) {
+                this.properties = new HashMap<>();
+            }
+            Mappings.merge(behavior.properties(), this.properties);
         }
-        if (this.properties == ANY_PROPERTIES) {
-            this.properties = behavior.properties();
-        }
-        Mappings.merge(behavior.properties(), this.properties);
-
         return this;
     }
 
@@ -199,13 +197,13 @@ public class BehaviorImpl implements Behavior {
             return false;
         }
         BehaviorImpl otherBehaviorImpl = (BehaviorImpl)other;
-        if (!this.type.equals(otherBehaviorImpl.type())) {
+        if (!type.equals(otherBehaviorImpl.type())) {
             return false;
         }
-        if (this.properties == null || ((BehaviorImpl) other).properties == null) {
-            return false;
+        if (properties == null || otherBehaviorImpl.properties == null) {
+            return this.properties == otherBehaviorImpl.properties;
         }
-        if (!this.properties.equals(otherBehaviorImpl.properties)) {
+        if (!properties.equals(otherBehaviorImpl.properties)) {
             return false;
         }
         return true;

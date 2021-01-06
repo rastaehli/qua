@@ -13,13 +13,10 @@ public class ConstructionImpl implements Construction {
 
     private Description builderDescription;
     private Map<String, Object> dependencies;
-    private Map<String, Object> interfaces;
-    private static final String PRIMARY_SERVICE_NAME = "PRIMARY"; // unique key for primary service interface
 
     public ConstructionImpl(Description builderDescription, Map<String, Object> dependencies) {
         this.builderDescription = builderDescription;
         this.dependencies = dependencies;
-        this.interfaces = null;
     }
 
     @Override
@@ -62,33 +59,6 @@ public class ConstructionImpl implements Construction {
     }
 
     @Override
-    public Map<String, Object> interfaces() {
-        return this.interfaces;
-    }
-
-    @Override
-    public Object getInterface(String name) {
-        return this.interfaces.get(name);
-    }
-
-    @Override
-    public Construction setService(Object obj) {
-        this.interfaces.put(PRIMARY_SERVICE_NAME, obj);
-        return this;
-    }
-
-    @Override
-    public Construction setInterface(String name, Object value) {
-        this.interfaces.put(name, value);
-        return this;
-    }
-
-    @Override
-    public Object service() {
-        return getInterface(PRIMARY_SERVICE_NAME);
-    }
-
-    @Override
     public boolean equals(Construction other) {
         if (!(other instanceof ConstructionImpl)) {
             return false;
@@ -111,9 +81,6 @@ public class ConstructionImpl implements Construction {
         if (this.builderDescription == null && goal.builderDescription() != null) {
             this.builderDescription = goal.builderDescription();
         }
-        if (this.service() == null && goal.service() != null) {
-            this.setService( goal.service() );
-        }
         if (this.dependencies == null && goal.dependencies() != null) {
             this.dependencies = goal.dependencies();
         }
@@ -124,9 +91,11 @@ public class ConstructionImpl implements Construction {
     @Override
     public List<Description> descriptions() {
         List<Description> descriptions = new ArrayList<>();
-        for (Object o: dependencies.values()) {
-            if (o instanceof Description) {
-                descriptions.add((Description) o);
+        if (dependencies != null) {
+            for (Object o: dependencies.values()) {
+                if (o instanceof Description) {
+                    descriptions.add((Description) o);
+                }
             }
         }
         if (builderDescription != null) {

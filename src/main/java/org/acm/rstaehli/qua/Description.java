@@ -28,6 +28,8 @@ public class Description {
     protected Behavior behavior;
     protected Quality quality;
     protected Construction construction;
+    private Map<String, Object> interfaces;
+    public static final String PRIMARY_SERVICE_NAME = "serviceObject"; // unique key for primary service interface
 
 //    protected Description builderDescription = null; // service to build type from dependencies
 //    protected Map<String, Object> dependencies = new HashMap<>();  // services needed by the builder
@@ -42,8 +44,16 @@ public class Description {
         this.behavior = new BehaviorImpl(type, properties);
 
         Description builderDescription = getField(jsonObject, "builderDescription");
-        HashMap<String, Object> dependencies = getField(jsonObject, "dependencies", new HashMap<>());
-        this.construction = new ConstructionImpl(builderDescription, dependencies);
+        Map<String, Object> dependencies = getField(jsonObject, "dependencies", new HashMap<>());
+        if (builderDescription != null || !dependencies.isEmpty()) {
+            this.construction = new ConstructionImpl(builderDescription, dependencies);
+        }
+
+        Object serviceObject = getField(jsonObject, PRIMARY_SERVICE_NAME);
+        this.interfaces = getField(jsonObject, "interfaces", new HashMap<>());
+        if (serviceObject != null) {
+            interfaces.put(PRIMARY_SERVICE_NAME, serviceObject);
+        }
 
         computeStatus();
     }
@@ -54,11 +64,11 @@ public class Description {
     }
 
     public Description computeStatus() {
-        if (construction.service() != null) {
+        if (service() != null) {
             status = ACTIVE;  // construction sets primary service only when active/ready
             return this;
         }
-        if (construction.interfaces() != null && !construction.interfaces().isEmpty()) {
+        if (interfaces != null && !interfaces.isEmpty()) {
             status = ASSEMBLED;  // built and interfaces identified
             return this;  // don't care if typed or planned
         }
@@ -204,16 +214,17 @@ public class Description {
     }
 
     // assumes no repository needed, as in service already active
-    public Object service() throws NoImplementationFound {
-        return service(null);
+    public Object service() {
+        return getInterface(PRIMARY_SERVICE_NAME);
     }
 
     public Object service(Repository repo) throws NoImplementationFound {
         if (!isActive()) {
             this.activate(repo);
         }
-        return construction.service();
+        return getInterface(PRIMARY_SERVICE_NAME);
     }
+
 
     // queries about implementation status
 
@@ -262,6 +273,11 @@ public class Description {
 
         behavior.mergeBehavior(impl.behavior);
         construction.mergeConstruction(impl.construction);
+        if (interfaces == null) {
+            interfaces = impl.interfaces;
+        } else {
+            Mappings.merge(impl.interfaces, interfaces);
+        }
         for (Description d: childDescriptions()) {
             if (!d.isPlanned()) {
                 d.plan(repo);
@@ -357,12 +373,33 @@ public class Description {
         return copy;
     }
 
-    public Description setServiceObject(Object obj) {
-        construction.setService(obj);
-        return this;
-    }
-
     public Map<String, Object> dependencies() {
         return construction.dependencies();
     }
+
+    public Map<String, Object> interfaces() {
+        return this.interfaces;
+    }
+
+    public Object getInterface(String name) {
+        if (interfaces == null) {
+            interfaces = new HashMap();
+            return null;
+        }
+        return this.interfaces.get(name);
+    }
+
+    public Description setInterface(String name, Object value) {
+        if (interfaces == null) {
+            interfaces = new HashMap();
+        }
+        this.interfaces.put(name, value);
+        return this;
+    }
+
+    public Description setServiceObject(Object obj) {
+        setInterface(PRIMARY_SERVICE_NAME, obj);
+        return this;
+    }
+
 }

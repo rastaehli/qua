@@ -31,11 +31,6 @@ public interface Construction {
     Construction setDependencies(Map<String, Object> d);  // required dependencies
     Construction setDependency(String key, Object value);  // set a dependency value or Description
     Map<String, Object> dependencies();  // null or required dependencies
-    Construction setInterface(String name, Object value);
-    Map<String, Object> interfaces();  // null or map of interface URIs by name
-    Object getInterface(String name);
-    Construction setService(Object obj); // set primary service object interface
-    Object service(); // return primary object interface or null
     boolean equals(Construction other);
     void mergeConstruction(Construction goal);
     List<Description> descriptions();
