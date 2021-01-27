@@ -1,7 +1,6 @@
-package org.acm.rstaehli.qua.tools;
+package org.acm.rstaehli.qua;
 
-import org.acm.rstaehli.qua.ConstructionImpl;
-import org.acm.rstaehli.qua.Description;
+import org.acm.rstaehli.qua.tools.Namespace;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -9,14 +8,31 @@ import java.util.Map;
 import static org.acm.rstaehli.qua.Behavior.UNKNOWN_TYPE;
 
 /**
+ * Provides context for describing and building components.
  * Provides convenience methods for constructing Description objects programatically.
+ * Provides repository for finding implementations that match a description.
  */
-public class Describer {
+public class Qua {
 
     private Namespace ns;
+    private Repository repo;
 
-    public Describer(Map<String,String> namespaces) {
+    public Qua() {
+        this(new HashMap<>(), null);
+    }
+
+    public Qua(Map<String,String> namespaces) {
+        this(namespaces, null);
+    }
+
+    public Qua(Map<String,String> namespaces, Repository r) {
         this.ns = new Namespace(namespaces);
+        this.repo = r;
+    }
+
+    public Qua addRepository(Repository r) {
+        this.repo = r;
+        return this;
     }
 
     public Description namedService(String name, Object obj) {
@@ -59,5 +75,10 @@ public class Describer {
 
     public Description typeAndPlan(String type, Description builder) {
         return typedPlan(type, new HashMap<>(), builder, new HashMap());
+    }
+
+    public Repository repository() {
+        assert(repo != null);
+        return repo;
     }
 }

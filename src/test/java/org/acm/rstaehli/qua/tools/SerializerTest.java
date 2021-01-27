@@ -1,7 +1,7 @@
 package org.acm.rstaehli.qua.tools;
 
 import org.acm.rstaehli.qua.FileBasedRepository;
-import org.acm.rstaehli.qua.Repository;
+import org.acm.rstaehli.qua.Qua;
 import org.junit.Before;
 import org.junit.Test;
 import org.acm.rstaehli.qua.Description;
@@ -14,15 +14,16 @@ import java.util.List;
 import static junit.framework.TestCase.assertTrue;
 
 public class SerializerTest {
-    private Describer describe;
+    private Qua qua;
     private Description desc;
     private String dir;
     private Serializer serializer;
 
     @Before
     public void setUp() throws IOException {
-        describe = new Describer(null);
+        qua = new Qua(null);
         dir = "src/test/resources/descriptionCases/";
+        new FileBasedRepository(dir,qua);
         serializer = new Serializer();
     }
 
@@ -74,7 +75,7 @@ public class SerializerTest {
     public void test_plan_noImplementation() throws FileNotFoundException, NoImplementationFound {
         desc = serializer.descriptionFromJsonFile(dir, "noImplementation");
         assertTrue(desc.isTyped());
-        desc.plan(new FileBasedRepository(dir));
+        desc.plan(qua);
     }
 
     @Test

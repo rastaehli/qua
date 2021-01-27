@@ -218,9 +218,9 @@ public class Description {
         return getInterface(PRIMARY_SERVICE_NAME);
     }
 
-    public Object service(Repository repo) throws NoImplementationFound {
+    public Object service(Qua qua) throws NoImplementationFound {
         if (!isActive()) {
-            this.activate(repo);
+            this.activate(qua);
         }
         return getInterface(PRIMARY_SERVICE_NAME);
     }
@@ -257,15 +257,15 @@ public class Description {
     /**
      * find implementations matching name or behavior and set these attributes.
      * on this description.
-     * @param repo has implementation descriptions that may provide the needed plan.
+     * @param qua has implementation descriptions that may provide the needed plan.
      * @return this Description updated with construction plan.
      * @throws NoImplementationFound
      */
-    public Description plan(Repository repo) throws NoImplementationFound {
+    public Description plan(Qua qua) throws NoImplementationFound {
         if (isPlanned()) {
             return this;
         }
-        Description impl = repo.bestMatch(this);
+        Description impl = qua.repository().bestMatch(this);
         if (impl == null) {
             logger.error("no implementation for type: " + this.behavior.type());
             throw new NoImplementationFound("for type: " + this.behavior.type());
@@ -280,7 +280,7 @@ public class Description {
         }
         for (Description d: childDescriptions()) {
             if (!d.isPlanned()) {
-                d.plan(repo);
+                d.plan(qua);
             }
         };
 
@@ -295,16 +295,16 @@ public class Description {
     /**
      * discover, provide and/or build all required dependencies
      */
-    public Description provision(Repository repo) throws NoImplementationFound {
+    public Description provision(Qua qua) throws NoImplementationFound {
         if (isProvisioned()) {
             return this;
         }
         if (!isPlanned()) {
-            return plan(repo).provision(repo);
+            return plan(qua).provision(qua);
         }
         for (Description d: childDescriptions()) {
             if (!d.isProvisioned()) {
-                d.provision(repo);
+                d.provision(qua);
             }
         };
         status = PROVISIONED;
@@ -321,12 +321,12 @@ public class Description {
         return assemble(null);
     }
 
-    public Description assemble(Repository repo) throws NoImplementationFound {
+    public Description assemble(Qua qua) throws NoImplementationFound {
         if (isAssembled()) {
             return this;
         }
         if (!isProvisioned()) {
-            provision(repo);
+            provision(qua);
         }
         for (Description d: childDescriptions()) {
             if (!d.isAssembled()) {
@@ -342,12 +342,12 @@ public class Description {
         return activate(null);
     }
 
-    public Description activate(Repository repo) throws NoImplementationFound {
+    public Description activate(Qua qua) throws NoImplementationFound {
         if (isActive()) {
             return this;  // already assembled and active
         }
         if (!isAssembled()) {
-            return assemble(repo);
+            return assemble(qua);
         }
         construction.builder().start(this);
         status = ACTIVE;

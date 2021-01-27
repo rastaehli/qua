@@ -20,11 +20,14 @@ public class FileBasedRepository extends AbstractRepository {
     private AbstractRepository cacheRepository;
     private String fileDirectoryPath;
     private Serializer serializer;
+    private Qua qua;
 
-    public FileBasedRepository(String dir) {
+    public FileBasedRepository(String dir, Qua q) {
         cacheRepository = new InMemoryRepository();
         fileDirectoryPath = dir;
         serializer = new Serializer();
+        qua = q;
+        qua.addRepository(this);  // treat as 1:1 relation
     }
 
     public void advertise(Description impl) {
@@ -38,7 +41,7 @@ public class FileBasedRepository extends AbstractRepository {
             Description d = serializer.descriptionFromJsonFile( fileDirectoryPath, fileNamePart(name) );
             try {
                 d.setName(name);  // ensure name is part of description so advertise does not map by type
-                d.activate(this);  // don't bother to return unless it is full implementation
+                d.activate(qua);  // don't bother to return unless it is full implementation
                 cacheRepository.advertise( d );  // cache named instance to avoid rereading the file
                 matches.add( d );
             } catch (NoImplementationFound e) {

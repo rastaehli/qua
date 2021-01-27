@@ -11,19 +11,19 @@ import java.util.Map;
 
 import static junit.framework.TestCase.assertTrue;
 
-public class DescriberTest {
-    private Describer describer;
+public class QuaTest {
+    private Qua qua;
     private Description description;
 
     @Before
     public void setUp() throws IOException {
-        describer = new Describer(new HashMap());
+        qua = new Qua(new HashMap());
     }
 
     @Test
     public void test_namedService() throws NoImplementationFound {
         Map<String,Object> map = new HashMap<String,Object>();
-        description = describer.namedService("noType", map);
+        description = qua.namedService("noType", map);
         assertTrue(description.isActive());
         assertTrue(description.name().equals("noType"));
         Object obj = description.service();
@@ -53,9 +53,9 @@ public class DescriberTest {
         Map<String,Object> properties = new HashMap<>();
         properties.put("p1", "value1");
         properties.put("p2", "value2");
-        Description builder = describer.namedService("concatenator", new Concatenator());
+        Description builder = qua.namedService("concatenator", new Concatenator());
 
-        description = describer.typedPlan(type, properties, builder, properties);
+        description = qua.typedPlan(type, properties, builder, properties);
 
         assertTrue(!description.isActive());  // no active yet
         assertTrue(description.isPlanned());
@@ -63,13 +63,13 @@ public class DescriberTest {
         assertTrue(description.service().equals("value1value2"));
     }
 //    public void test_json_minimalPlan() throws NoImplementationFound {
-//        description = describer.lookupByName("minimalPlan");
+//        description = qua.lookupByName("minimalPlan");
 //        assertTrue(description.isPlanned());
 //    }
 //
 //    @Test
 //    public void test_json_planWithDependencies() throws NoImplementationFound {
-//        description = describer.lookupByName("planWithDependencies");
+//        description = qua.lookupByName("planWithDependencies");
 //        assertTrue(description.isTyped());
 //        assertTrue(description.dependencies().size() > 1);
 //    }
@@ -77,7 +77,7 @@ public class DescriberTest {
 //    @Test
 //    public void test_json_extendedProperties() throws NoImplementationFound {
 //        desc.advertise(description.lookupByName("namedDescription"));  // parent for extendedProperties
-//        description = describer.lookupByName("extendedProperties");
+//        description = qua.lookupByName("extendedProperties");
 //        assertTrue(description.isTyped());
 //        assertTrue(description.properties().get("newProperty1").equals("value1"));
 //        assertTrue((Double)(description.properties().get("numberProp")) == 1.3 );
@@ -87,7 +87,7 @@ public class DescriberTest {
 //    public void test_json_multiLevelInheritance() throws NoImplementationFound {
 //        desc.advertise(description.lookupByName("namedDescription"));  // parent for extendedProperties
 //        desc.advertise(description.lookupByName("extendedProperties")); // parent for multilevelInheritance
-//        description = describer.lookupByName("multiLevelInheritance");
+//        description = qua.lookupByName("multiLevelInheritance");
 //        assertTrue(description.isTyped());
 //        assertTrue(description.properties().get("newProperty2").equals("value2"));
 //        assertTrue(description.properties().get("newProperty1").equals("value99"));  // child overrode value
@@ -96,22 +96,22 @@ public class DescriberTest {
 //
 //    @Test(expected = NoImplementationFound.class)
 //    public void test_plan_noImplementation() throws NoImplementationFound {
-//        description = describer.lookupByName("noImplementation");
+//        description = qua.lookupByName("noImplementation");
 //        assertTrue(description.isTyped());
-//        desc.plan(repo);
+//        desc.plan(qua);
 //    }
 //
 //    @Test
 //    public void test_namespaces() throws Exception {
-//        description = describer.lookupByName("namespace1AliasNs1");
+//        description = qua.lookupByName("namespace1AliasNs1");
 //        assertTrue(description.type().equals("namespace1exampleType"));
 //    }
 //
 //    @Test
 //    public void test_json_arrayProperties() throws Exception {
-//        description = describer.lookupByName("arrayProperties");
+//        description = qua.lookupByName("arrayProperties");
 //        assertTrue(description.isTyped());
-//        Object o = describer.properties().get("listOfStrings");
+//        Object o = qua.properties().get("listOfStrings");
 //        assertTrue(o instanceof List);
 //        List<String> strings = (List<String>)o;
 //        assertTrue(strings.size() == 2);
@@ -120,7 +120,7 @@ public class DescriberTest {
 //
 //    @Test
 //    public void test_json_multiParentInheritance() throws Exception {
-//        description = describer.lookupByName("multiParentInheritance");
+//        description = qua.lookupByName("multiParentInheritance");
 //        assertTrue(description.isTyped());
 //        assertTrue(description.type().equals("qua:exampleType"));
 //        assertTrue(description.properties().get("childProperty2").equals("value2"));
