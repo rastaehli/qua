@@ -208,6 +208,10 @@ public class Description {
         return (List<Description>)properties().get(key);
     }
 
+    public Description descriptionProperty(String key) {
+        return (Description)properties().get(key);
+    }
+
     public Description setConstruction(Construction c) {
         construction = c;
         return this;
