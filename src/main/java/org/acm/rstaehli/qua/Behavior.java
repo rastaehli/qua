@@ -25,7 +25,7 @@ import java.util.Map;
 public interface Behavior {
 
     public static final String UNKNOWN_TYPE = "UNKNOWN_TYPE";
-    public static final Object MATCH_ANY = "http://org.acm.rstaehli.qua/model/build/MATCH_ANY";
+    public static final String MATCH_ANY = "http://org.acm.rstaehli.qua/model/build/MATCH_ANY";
 
     Behavior setType(String name);  // name the type of behavior required of serviceObject
     String type();  // the name for the behavior or UNKNOWN_TYPE
