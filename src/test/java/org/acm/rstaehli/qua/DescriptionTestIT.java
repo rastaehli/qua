@@ -14,7 +14,7 @@ import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
 import static org.acm.rstaehli.qua.Behavior.MATCH_ANY;
 
-public class DescriptionTest {
+public class DescriptionTestIT {
     private Description desc;
     private Repository repo;
     private Serializer serializer;

@@ -5,6 +5,8 @@ import org.acm.rstaehli.qua.exceptions.NoImplementationFound;
 import java.io.FileNotFoundException;
 import java.util.*;
 
+import static org.acm.rstaehli.qua.Behavior.MATCH_ANY;
+
 public class InMemoryRepository extends AbstractRepository {
 
     private Map<String, List<Description>> typeMap;  // support lookup by type
@@ -26,12 +28,12 @@ public class InMemoryRepository extends AbstractRepository {
         if (isNamed(impl)) {
             addMapping(impl.name(), impl, nameMap);  // singletons accessed by name
         } else {
-            addMapping(impl.type, impl, typeMap);  // generic implementations by type
+            addMapping(impl.type(), impl, typeMap);  // generic implementations by type
         }
     }
 
     private boolean isNamed(Description impl) {
-        return impl.name() != null && !impl.name().equals(Description.MATCH_ANY);
+        return impl.name() != null && !impl.name().equals(MATCH_ANY);
     }
 
     public void addMapping(String key, Description value, Map<String,List<Description>> map) {

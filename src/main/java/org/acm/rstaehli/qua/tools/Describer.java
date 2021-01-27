@@ -1,11 +1,12 @@
 package org.acm.rstaehli.qua.tools;
 
+import org.acm.rstaehli.qua.ConstructionImpl;
 import org.acm.rstaehli.qua.Description;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.acm.rstaehli.qua.Description.UNKNOWN_TYPE;
+import static org.acm.rstaehli.qua.Behavior.UNKNOWN_TYPE;
 
 /**
  * Provides convenience methods for constructing Description objects programatically.
@@ -40,8 +41,7 @@ public class Describer {
         return new Description()
                 .setType(ns.translate(type))
                 .setProperties(ns.translate(properties))
-                .setBuilderDescriptions(builder)
-                .setDependencies(ns.translate(dependencies))
+                .setConstruction(new ConstructionImpl(builder, ns.translate(dependencies)))
                 .computeStatus();
     }
 
