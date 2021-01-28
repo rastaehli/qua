@@ -1,7 +1,6 @@
 package org.acm.rstaehli.qua.tools;
 
 import org.acm.rstaehli.qua.Behavior;
-import org.acm.rstaehli.qua.Description;
 
 import java.util.ArrayList;
 import java.util.Map;
@@ -18,15 +17,20 @@ import java.util.Map;
  *    When the JSON qua document is read, the name should be translated to:
  *      "name": "http://org.acm.rstaehli.qua/model/build/Sort"
  *
- * Use of such namespaces avoids conflicts between a "Sort" defined by
+ * Use of namespaces avoids conflicts between a "Sort" defined by
  * different domains.
  */
 public class Namespace {
 
-    private Map<String, String> namespaces;
+    private Map<String, String> prefixMap;
 
-    public Namespace(Map<String, String> namespaces) {
-        this.namespaces = namespaces;
+    public Namespace(Map<String, String> map) {
+        this.prefixMap = map;
+    }
+
+    public Namespace addMapping(String prefix, String fullName) {
+        prefixMap.put(prefix, fullName);
+        return this;
     }
 
     public Map<String, Object> translate(Map<String, Object> map) {
@@ -56,7 +60,7 @@ public class Namespace {
         int aliasEnd = value.indexOf(':');
         if (aliasEnd > 0) {
             String alias = value.substring(0, aliasEnd);
-            String translation = namespaces.get(alias);
+            String translation = prefixMap.get(alias);
             if (translation != null) {
                 return translation + value.substring(aliasEnd + 1, value.length());
             }

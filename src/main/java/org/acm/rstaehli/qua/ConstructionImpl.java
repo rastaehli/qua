@@ -33,7 +33,7 @@ public class ConstructionImpl implements Construction {
     @Override
     public Builder builder() throws NoImplementationFound {
         if (builderDescription == null) {
-            throw new NoImplementationFound("for builderDescription");
+            throw new NoImplementationFound("no description for builder");
         }
         return (Builder)builderDescription.service();
     }

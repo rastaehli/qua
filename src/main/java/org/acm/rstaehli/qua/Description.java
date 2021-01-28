@@ -1,5 +1,6 @@
 package org.acm.rstaehli.qua;
 
+import com.google.gson.Gson;
 import org.acm.rstaehli.qua.exceptions.NoImplementationFound;
 import org.apache.log4j.Logger;
 
@@ -25,9 +26,9 @@ public class Description {
 
     private static final Logger logger = Logger.getLogger(Description.class);
 
-    protected Behavior behavior;
-    protected Quality quality;
-    protected Construction construction;
+    protected BehaviorImpl behavior;
+    protected QualityImpl quality;
+    protected ConstructionImpl construction;
     private Map<String, Object> interfaces;
     public static final String PRIMARY_SERVICE_NAME = "serviceObject"; // unique key for primary service interface
 
@@ -213,7 +214,7 @@ public class Description {
     }
 
     public Description setConstruction(Construction c) {
-        construction = c;
+        construction = (ConstructionImpl) c;
         return this;
     }
 
@@ -276,12 +277,11 @@ public class Description {
         }
 
         behavior.mergeBehavior(impl.behavior);
-        construction.mergeConstruction(impl.construction);
-        if (interfaces == null) {
-            interfaces = impl.interfaces;
-        } else {
-            Mappings.merge(impl.interfaces, interfaces);
-        }
+        construction = new ConstructionImpl(
+                impl.construction.builderDescription(),
+                impl.construction.dependencies());
+        interfaces = impl.interfaces;
+        // don't allow partially planned description
         for (Description d: childDescriptions()) {
             if (!d.isPlanned()) {
                 d.plan(qua);
@@ -342,6 +342,12 @@ public class Description {
         return this;
     }
 
+    public Description disAssemble() {
+        interfaces().clear();
+        computeStatus();
+        return this;
+    }
+
     public Description activate() throws NoImplementationFound {
         return activate(null);
     }
@@ -365,16 +371,14 @@ public class Description {
      * @return null or a specialized copy matching goal
      */
     public Description matchFor(Description goal) {
-        Behavior specializedBehavior = this.behavior.specializeFor(goal.behavior());
+        Description copy = mutableCopy();
+        Behavior specializedBehavior = copy.behavior.specializeFor(goal.behavior());
         if (specializedBehavior == null) {
             return null;
+        } else {
+            copy.computeStatus();   // may have changed from copied values
+            return copy;
         }
-        Description copy = new Description();
-        copy.behavior = specializedBehavior;
-        copy.quality = this.quality;
-        copy.construction = this.construction;
-        copy.computeStatus();   // may have changed from copied values
-        return copy;
     }
 
     public Map<String, Object> dependencies() {
@@ -398,6 +402,7 @@ public class Description {
             interfaces = new HashMap();
         }
         this.interfaces.put(name, value);
+        computeStatus();
         return this;
     }
 
@@ -406,4 +411,10 @@ public class Description {
         return this;
     }
 
+    public Description mutableCopy() {
+        Gson gson = new Gson();
+        String serialization = gson.toJson(this);
+        // serialization ensures the copy shares no objects from original
+        return gson.fromJson(serialization, Description.class);
+    }
 }

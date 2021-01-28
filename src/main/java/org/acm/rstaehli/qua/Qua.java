@@ -35,6 +35,10 @@ public class Qua {
         return this;
     }
 
+    public Namespace namespace() {
+        return ns;
+    }
+
     public Description namedService(String name, Object obj) {
         return new Description()
                 .setName(ns.translate(name))
@@ -81,4 +85,19 @@ public class Qua {
         assert(repo != null);
         return repo;
     }
+
+    public Description typedService(String type, Object service) {
+        Description d = type(type);
+        d.setServiceObject(service);
+        return d;
+    }
+
+    public String translate(String alias) {
+        return ns.translate(alias);
+    }
+
+    public Description mutableCopy(Description d) {
+        return d.mutableCopy();
+    }
+
 }

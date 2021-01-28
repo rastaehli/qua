@@ -133,29 +133,28 @@ public class BehaviorImpl implements Behavior {
         if (!type.equals(goal.type())) {
             return null;
         }
-        BehaviorImpl specialized = new BehaviorImpl().mergeBehavior(this);
-        if (specialized.properties.equals(ANY_PROPERTIES)) { // builder promises to match all properties
-            specialized.properties = goal.properties();  // so mergeBehavior the properties for the builder
-            return specialized;
+        if (this.properties.equals(ANY_PROPERTIES)) { // builder promises to match all properties
+            this.properties = goal.properties();  // so mergeBehavior the properties for the builder
+            return this;
         }
         // must have all goal properties
         for (String name: goal.properties().keySet()) {
-            if (specialized.hasProperty(name) && specialized.getProperty(name) == Behavior.MATCH_ANY ) {
+            if (this.hasProperty(name) && this.getProperty(name).equals(Behavior.MATCH_ANY )) {
                 // MATCH_ANY is a promise from the implementation to build with required property value
-                specialized.properties.put(name, goal.properties().get(name));
+                this.properties.put(name, goal.properties().get(name));
             } else {
-                Object match = match(specialized.getProperty(name), goal.properties().get(name));
+                Object match = match(this.getProperty(name), goal.properties().get(name));
                 if (match == null) {
                     logger.debug("property " + name +
-                            " value: " + specialized.getProperty(name) +
+                            " value: " + this.getProperty(name) +
                             " does not match goal: " + goal.properties().get(name) + " for type: "+ type );
                     return null;
                 }
-                specialized.properties.put(name, match); // match may be mutation that conforms to goal
+                this.properties.put(name, match); // match may be mutation that conforms to goal
             }
         }
-        removeObsoleteWildcards(specialized.properties);  // unmatched MATCH_ANY values
-        return specialized;
+        removeObsoleteWildcards(this.properties);  // unmatched MATCH_ANY values
+        return this;
     }
 
     private void removeObsoleteWildcards(Map<String, Object> map) {

@@ -20,7 +20,7 @@ public class FileBasedRepository extends AbstractRepository {
     private AbstractRepository cacheRepository;
     private String fileDirectoryPath;
     private Serializer serializer;
-    private Qua qua;
+    protected Qua qua;
 
     public FileBasedRepository(String dir, Qua q) {
         cacheRepository = new InMemoryRepository();
@@ -35,22 +35,27 @@ public class FileBasedRepository extends AbstractRepository {
     }
 
     @Override
-    protected Collection<Description> implementationsByName(String name) {
-        Collection<Description> matches = cacheRepository.implementationsByName(name);
+    public Description implementationByName(String name) throws NoImplementationFound {
         try {
-            Description d = serializer.descriptionFromJsonFile( fileDirectoryPath, fileNamePart(name) );
-            try {
-                d.setName(name);  // ensure name is part of description so advertise does not map by type
-                d.activate(qua);  // don't bother to return unless it is full implementation
-                cacheRepository.advertise( d );  // cache named instance to avoid rereading the file
-                matches.add( d );
-            } catch (NoImplementationFound e) {
-                logger.error("could not activate file-based description: " + name + ".  Exception: " + e);
-            }
-        } catch (FileNotFoundException e2) {
-            logger.info("file implementation not found for: " + fileDirectoryPath + fileNamePart(name));
+            return cacheRepository.implementationByName(name);
+        } catch(NoImplementationFound e) {
+            logger.debug("no cached implementation for name: " + name);
         }
-        return matches;
+        // next look in file system
+        Description impl = null;
+        try {
+            impl = serializer.descriptionFromJsonFile( Name.keyPart(name), fileDirectoryPath );
+        } catch (Exception e2) {
+            logger.info("exception reading description from file: " + fileDirectoryPath + Name.keyPart(name));
+        }
+        try {
+            impl.plan(qua);  // don't bother to return unless it is fully planned
+            impl.setName(name);  // ensure name is part of description so advertise does not map by type
+            cacheRepository.advertise( impl );  // cache named instance to avoid rereading the file
+        } catch (NoImplementationFound e) {
+            logger.error("could not plan file-based description: " + name + ".  Exception: " + e);
+        }
+        return impl;
     }
 
     private String fileNamePart(String name) {

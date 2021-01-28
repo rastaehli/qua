@@ -2,6 +2,7 @@ package org.acm.rstaehli.qua;
 
 import sun.security.krb5.internal.crypto.Des;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -26,6 +27,7 @@ public interface Behavior {
 
     public static final String UNKNOWN_TYPE = "UNKNOWN_TYPE";
     public static final String MATCH_ANY = "http://org.acm.rstaehli.qua/model/build/MATCH_ANY";
+    public static final Map<String, Object> ALL_PROPERTIES = new HashMap();  // signal to match any properties map
 
     Behavior setType(String name);  // name the type of behavior required of serviceObject
     String type();  // the name for the behavior or UNKNOWN_TYPE

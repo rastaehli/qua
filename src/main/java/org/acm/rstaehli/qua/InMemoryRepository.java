@@ -10,7 +10,7 @@ import static org.acm.rstaehli.qua.Behavior.MATCH_ANY;
 public class InMemoryRepository extends AbstractRepository {
 
     private Map<String, List<Description>> typeMap;  // support lookup by type
-    private Map<String, List<Description>> nameMap;  // lookup by name
+    private Map<String, Description> nameMap;  // lookup by name
 
     public InMemoryRepository() {
         typeMap = new HashMap<>();
@@ -26,7 +26,7 @@ public class InMemoryRepository extends AbstractRepository {
             throw new IllegalStateException("attempt to advertise description with no implementation");
         }
         if (isNamed(impl)) {
-            addMapping(impl.name(), impl, nameMap);  // singletons accessed by name
+            nameMap.put(impl.name(), impl);
         } else {
             addMapping(impl.type(), impl, typeMap);  // generic implementations by type
         }
@@ -55,12 +55,12 @@ public class InMemoryRepository extends AbstractRepository {
     }
 
     @Override
-    protected Collection<Description> implementationsByName(String name) {
-        List<Description> matches = nameMap.get(name);
-        if (matches == null || matches.size() < 1) {
-            return new ArrayList<>();
+    public Description implementationByName(String name) throws NoImplementationFound {
+        Description match = nameMap.get(name);
+        if (match == null) {
+            throw new NoImplementationFound("for name: " + name);
         }
-        return matches;
+        return match;
     }
 
     @Override

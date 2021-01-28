@@ -2,9 +2,11 @@ package org.acm.rstaehli.qua.tools;
 
 import com.google.gson.Gson;
 import org.acm.rstaehli.qua.Description;
+import org.apache.log4j.Logger;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 
@@ -19,19 +21,49 @@ import java.util.*;
  * When a service is built, it can be accessed by its "service" property.
  */
 public class Serializer {
+    private static final Logger logger = Logger.getLogger(Serializer.class);
 
-    public Description descriptionFromJsonFile(String directoryPath, String name) throws FileNotFoundException {
-        Map<String,Object> jsonMap = mapFromJsonFile(directoryPath, name);
+    public Description descriptionFromJsonFile(String name, String ... directoryPath) throws Exception {
+        Map<String,Object> jsonMap = mapFromJsonFile(name, directoryPath);
         return new Description(jsonMap);
     }
 
-    public Map<String,Object> mapFromJsonFile(String directoryPath, String name) throws FileNotFoundException {
-        Map<String,Object> jsonMap = new Gson().fromJson(new FileReader(Paths.get(directoryPath + name + ".json").toFile()), Map.class);
+    public Map<String,Object> mapFromJsonFile(String name, String ... directoryPath) throws Exception {
+       String fileName = null;
+       FileReader input = null;
+       Map<String,Object> jsonMap = null;
+        for (int i=0; i<directoryPath.length; i++) {
+            String path = directoryPath[i];
+            if (path.length() > 1) {
+                path += path.endsWith("/") ? "" : "/";  // add trailing separator if missing
+            }
+            fileName = path + name + ".json";
+            try {
+                input = new FileReader(Paths.get(fileName).toFile());
+                break;
+            } catch (FileNotFoundException e) {
+                if (i == directoryPath.length) {
+                    logger.error("exception: " + e.getMessage() + " opening file: " + fileName);
+                    throw e;
+                } else {
+                    logger.debug("exception: " + e.getMessage() + " opening file: " + fileName);
+                }
+            }
+        }
+        if (input == null) {
+            throw new FileNotFoundException(fileName);
+        }
+        try {
+            jsonMap = new Gson().fromJson(input, Map.class);
+            input.close();
+        } catch(Exception e) {
+            throw new Exception("exception reading json file: " + fileName);
+        }
 
         if (jsonMap.containsKey("parents")) {
             List<String> parentNames = (List<String>)jsonMap.get("parents");
             for (String parent: parentNames) {
-                Map<String,Object> mapParent = mapFromJsonFile(directoryPath, parent);
+                Map<String,Object> mapParent = mapFromJsonFile(parent, directoryPath);
                 inheritFrom(mapParent, jsonMap);
             }
         }
