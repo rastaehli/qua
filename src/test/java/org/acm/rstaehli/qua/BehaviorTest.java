@@ -9,8 +9,8 @@ import java.util.Map;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
-import static org.acm.rstaehli.qua.Behavior.MATCH_ANY;
 import static org.acm.rstaehli.qua.Behavior.UNKNOWN_TYPE;
+import static org.acm.rstaehli.qua.BehaviorImpl.MATCH_ANY;
 
 public class BehaviorTest {
     private Behavior behavior;
@@ -33,11 +33,11 @@ public class BehaviorTest {
     public void test_properties() {
         behavior = new BehaviorImpl();
         assertTrue(behavior.type().equals(UNKNOWN_TYPE));
-        assertTrue(behavior.properties() == null);
+        assertTrue(behavior.properties().isEmpty());
         assertTrue(!behavior.hasProperty("bar"));
         behavior.setType("foo");
         assertTrue(behavior.isTyped());
-        assertTrue(behavior.properties() == null);
+        assertTrue(behavior.properties().isEmpty());
         assertTrue(!behavior.hasProperty("bar"));
         behavior.setProperty("bar", "baz");
         assertTrue(behavior.properties().size() == 1);

@@ -5,7 +5,7 @@ import org.acm.rstaehli.qua.exceptions.NoImplementationFound;
 import java.io.FileNotFoundException;
 import java.util.*;
 
-import static org.acm.rstaehli.qua.Behavior.MATCH_ANY;
+import static org.acm.rstaehli.qua.BehaviorImpl.MATCH_ANY;
 
 public class InMemoryRepository extends AbstractRepository {
 

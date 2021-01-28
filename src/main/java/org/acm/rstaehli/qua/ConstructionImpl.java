@@ -104,4 +104,11 @@ public class ConstructionImpl implements Construction {
         return descriptions;
     }
 
+    public ConstructionImpl mutableCopy() {
+        Description builderCopy = builderDescription == null
+                ? null
+                : builderDescription.mutableCopy();
+        Map<String, Object> dependencyCopy = Mappings.mutableCopy(dependencies);
+        return new ConstructionImpl(builderCopy, dependencyCopy);
+    }
 }

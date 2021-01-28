@@ -45,8 +45,8 @@ public class Description {
         this.behavior = new BehaviorImpl(type, properties);
 
         Description builderDescription = getField(jsonObject, "builderDescription");
-        Map<String, Object> dependencies = getField(jsonObject, "dependencies", new HashMap<>());
-        if (builderDescription != null || !dependencies.isEmpty()) {
+        if (builderDescription != null) {
+            Map<String, Object> dependencies = getField(jsonObject, "dependencies", new HashMap<>());
             this.construction = new ConstructionImpl(builderDescription, dependencies);
         }
 
@@ -96,7 +96,8 @@ public class Description {
 
 
     public Description(String type) {
-        this.behavior.setType(type);
+        this.behavior = new BehaviorImpl(type);
+        computeStatus();
     }
 
     protected  <T> T getField(Map<String,Object> o, String fieldName) {
@@ -159,7 +160,8 @@ public class Description {
     }
 
     public Description setType(String t) {
-        this.behavior.setType(t);
+        this.behavior = new BehaviorImpl(t);
+        computeStatus();
         return this;
     }
 
@@ -412,9 +414,21 @@ public class Description {
     }
 
     public Description mutableCopy() {
-        Gson gson = new Gson();
-        String serialization = gson.toJson(this);
-        // serialization ensures the copy shares no objects from original
-        return gson.fromJson(serialization, Description.class);
+        Description copy = new Description();
+        copy.behavior = behavior.mutableCopy();
+        copy.construction = construction == null
+                ? null
+                : construction.mutableCopy();
+        copy.quality = quality == null
+                ? null
+                : quality.mutableCopy();
+        if (interfaces == null) {
+            copy.interfaces = null;
+        } else {
+            copy.interfaces = new HashMap<>();
+            Mappings.merge(interfaces, copy.interfaces);
+        }
+        copy.computeStatus();
+        return copy;
     }
 }

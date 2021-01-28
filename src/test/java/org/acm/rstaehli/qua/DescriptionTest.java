@@ -11,7 +11,7 @@ import java.util.Map;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
-import static org.acm.rstaehli.qua.Behavior.MATCH_ANY;
+import static org.acm.rstaehli.qua.BehaviorImpl.MATCH_ANY;
 
 public class DescriptionTest {
     private Description desc;

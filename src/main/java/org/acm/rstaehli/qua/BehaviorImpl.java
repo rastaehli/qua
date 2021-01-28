@@ -10,6 +10,12 @@ import java.util.stream.Stream;
  */
 public class BehaviorImpl implements Behavior {
 
+    public static final String MATCH_ANY = "http://org.acm.rstaehli.qua/model/build/MATCH_ANY";
+    public static final Map<String, Object> ALL_PROPERTIES = new HashMap();  // signal to match any properties map
+    {
+        ALL_PROPERTIES.put("*","*");  // even when this map is copied/translated, these values signal ALL_PROPERTIES
+    }
+
     private static final Logger logger = Logger.getLogger(BehaviorImpl.class);
 
     public static final Map<String, Object> ANY_PROPERTIES = new HashMap();  // signal to match any properties map
@@ -26,11 +32,11 @@ public class BehaviorImpl implements Behavior {
     }
 
     public BehaviorImpl() {
-        this(UNKNOWN_TYPE, null);
+        this(UNKNOWN_TYPE, new HashMap<>());
     }
 
     public BehaviorImpl(String type) {
-        this(type, null);
+        this(type, new HashMap<>());
     }
 
     public BehaviorImpl setName(String n) {
@@ -139,7 +145,7 @@ public class BehaviorImpl implements Behavior {
         }
         // must have all goal properties
         for (String name: goal.properties().keySet()) {
-            if (this.hasProperty(name) && this.getProperty(name).equals(Behavior.MATCH_ANY )) {
+            if (this.hasProperty(name) && this.getProperty(name).equals(MATCH_ANY )) {
                 // MATCH_ANY is a promise from the implementation to build with required property value
                 this.properties.put(name, goal.properties().get(name));
             } else {
@@ -160,7 +166,7 @@ public class BehaviorImpl implements Behavior {
     private void removeObsoleteWildcards(Map<String, Object> map) {
         List<String> obsolete = new ArrayList();
         for (String key: map.keySet()) {
-            if (map.get(key) == Behavior.MATCH_ANY) {
+            if (map.get(key) == MATCH_ANY) {
                 obsolete.add(key);
             }
         }
@@ -219,4 +225,10 @@ public class BehaviorImpl implements Behavior {
         return descriptions;
     }
 
+    public BehaviorImpl mutableCopy() {
+        BehaviorImpl copy = new BehaviorImpl(type); // type is never mutable, so okay to copy
+        copy.properties = new HashMap<>();
+        Mappings.merge(properties, copy.properties());
+        return copy;
+    }
 }

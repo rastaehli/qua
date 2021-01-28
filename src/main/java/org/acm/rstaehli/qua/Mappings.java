@@ -1,5 +1,6 @@
 package org.acm.rstaehli.qua;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -23,4 +24,19 @@ public class Mappings {
         }
     }
 
+    public static Map<String, Object> mutableCopy(Map<String, Object> map) {
+        if (map == null) {
+            return null;
+        }
+        Map<String, Object> copy = new HashMap<>();
+        for (String s: map.keySet()) {
+            Object o = map.get(s);
+            if (o instanceof Description) {
+                copy.put(s, (Description)((Description) o).mutableCopy());
+            } else {
+                copy.put(s, o);
+            }
+        }
+        return copy;
+    }
 }

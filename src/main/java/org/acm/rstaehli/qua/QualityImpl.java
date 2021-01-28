@@ -1,5 +1,6 @@
 package org.acm.rstaehli.qua;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -68,5 +69,22 @@ public class QualityImpl implements Quality {
             return false; //  must not be null when comparing
         }
         return one.equals(two);
+    }
+
+    public QualityImpl mutableCopy() {
+        QualityImpl copy = new QualityImpl();
+        copy.errorDimensions = errorDimensions == null
+            ? null
+            : copy(errorDimensions);
+        copy.allowances = Mappings.mutableCopy(allowances);
+        copy.utilityFunctions = Mappings.mutableCopy(utilityFunctions);
+        copy.requiredUtility = requiredUtility;
+        return copy;
+    }
+
+    private List<String> copy(List<String> input) {
+        List<String> copy = new ArrayList<>();
+        copy.addAll(input);
+        return copy;
     }
 }

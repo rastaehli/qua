@@ -1,9 +1,9 @@
 package org.acm.rstaehli.qua.tools;
 
-import org.acm.rstaehli.qua.Behavior;
-
 import java.util.ArrayList;
 import java.util.Map;
+
+import static org.acm.rstaehli.qua.BehaviorImpl.MATCH_ANY;
 
 /**
  * Support short aliases for long namespace prefixes ALA XML or Turtle RDF documents.
@@ -44,8 +44,8 @@ public class Namespace {
                 if (t != o) {
                     map.put(key, t);
                 }
-                if (t.equals(Behavior.MATCH_ANY)) {
-                    map.put(key, Behavior.MATCH_ANY);  // use same object ref
+                if (t.equals(MATCH_ANY)) {
+                    map.put(key, MATCH_ANY);  // use same object ref
                 }
             } else if (o instanceof Map<?,?>) {
                 translate((Map<String,Object>)o);
