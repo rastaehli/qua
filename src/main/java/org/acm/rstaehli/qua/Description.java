@@ -155,12 +155,16 @@ public class Description {
     }
 
     public Description setName(String n) {
-        this.behavior.setProperty("name",n);
+        behavior.setProperty("name",n);
         return this;
     }
 
     public Description setType(String t) {
-        this.behavior = new BehaviorImpl(t);
+        if (behavior == null) {
+            behavior = new BehaviorImpl(t);
+        } else {
+            behavior.setType(t);
+        }
         computeStatus();
         return this;
     }

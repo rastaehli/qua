@@ -43,10 +43,12 @@ public class FileBasedRepository extends AbstractRepository {
         }
         // next look in file system
         Description impl = null;
+        String fileName = Name.keyPart(name);
         try {
-            impl = serializer.descriptionFromJsonFile( Name.keyPart(name), fileDirectoryPath );
+            impl = serializer.descriptionFromJsonFile( fileName, fileDirectoryPath );
         } catch (Exception e2) {
             logger.info("exception reading description from file: " + fileDirectoryPath + Name.keyPart(name));
+            throw new NoImplementationFound(fileName + " in directory " + fileDirectoryPath);
         }
         try {
             impl.plan(qua);  // don't bother to return unless it is fully planned
