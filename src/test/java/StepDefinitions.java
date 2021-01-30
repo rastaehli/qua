@@ -15,6 +15,8 @@ public class StepDefinitions {
     Construction plan1;
     Builder builder1;
     InMemoryRepository repo = new InMemoryRepository();
+    Description goal;
+    Description specialization;
 
     @Given("description with {string} {string} {string} {string} {string}")
     public void description_with(String type, String value1, String value2, String plan, String service) {
@@ -125,5 +127,58 @@ public class StepDefinitions {
             case "disAssemble": d.activate(qua); d.disAssemble(); break;
         }
     }
+
+    @Given("two descriptions with {string} and {string} with only {string}")
+    public void two_descriptions_with_and_with_only(String property, String dependency, String difference) {
+        d = descriptionWith(property, dependency);
+        goal = descriptionWith(property, dependency);
+        switch(difference) {
+            case "no diff": break;
+            case "first only typed": d.disAssemble().setConstruction(null); break;
+            case "first only provisioned": d.disAssemble(); break;
+            case "first type different": d.setType("different"); break;
+            case "first missing prop": d.properties().remove("prop"); break;
+            case "first prop type different": d.descriptionProperty("prop").setType("different"); break;
+            case "first prop only typed": d.descriptionProperty("prop").disAssemble().setConstruction(null); break;
+            case "first prop only provisioned": d.descriptionProperty("prop").disAssemble(); break;
+            case "first dependency type different": d.descriptionDependency("dep").setType("different"); break;
+            case "first dependency only typed": d.descriptionDependency("dep").disAssemble().setConstruction(null); break;
+            case "first dependency only provisioned": d.descriptionDependency("dep").disAssemble(); break;
+        }
+    }
+
+    private Description descriptionWith(String property, String dependency) {
+        Object prop = null;
+        switch(property) {
+            case "aString": prop = "aString"; break;
+            case "aNumber": prop = new Integer(99); break;
+            case "aDescription": prop = qua.typedService("typeB", "aString");
+        }
+        Object dep = null;
+        switch(dependency) {
+            case "aString": dep = "aString"; break;
+            case "aNumber": dep = new Integer(99); break;
+            case "aDescription": dep = qua.typedService("typeC", "aString");
+        }
+        return qua.type("typeA")
+                .setProperty("prop", prop)
+                .setBuilder(qua.typedService("Z", new TestBuilder()))
+                .setDependency("dep", dep);
+    }
+
+    @When("first is specialized for second")
+    public void first_is_specialized_for_second() {
+        specialization = d.specializedFor(goal);
+    }
+
+    @Then("specialization is {string}")
+    public void specialization_is(String expectedResult) {
+        switch(expectedResult) {
+            case "null": assertTrue(specialization == null); break;
+            case "match": assertTrue( specialization != null); break;
+        }
+        assertTrue(specialization != d && specialization != goal);
+    }
+
 
 }

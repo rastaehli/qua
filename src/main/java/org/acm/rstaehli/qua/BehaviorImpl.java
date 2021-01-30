@@ -3,7 +3,6 @@ package org.acm.rstaehli.qua;
 import org.apache.log4j.Logger;
 
 import java.util.*;
-import java.util.stream.Stream;
 
 /**
  * BehaviorImpl is a simple implementation of @Behavior interface.
@@ -146,7 +145,7 @@ public class BehaviorImpl implements Behavior {
         // must have all goal properties
         for (String name: goal.properties().keySet()) {
             if (this.hasProperty(name) && this.getProperty(name).equals(MATCH_ANY )) {
-                // MATCH_ANY is a promise from the implementation to build with required property value
+                // MATCH_ANY is a promise from an implementation to build with required property value
                 this.properties.put(name, goal.properties().get(name));
             } else {
                 Object match = match(this.getProperty(name), goal.properties().get(name));
@@ -175,24 +174,23 @@ public class BehaviorImpl implements Behavior {
         }
     }
 
-    protected Object match(Object value1, Object value2) {
-        if (value1 == null ) {
+    protected Object match(Object property, Object requiredValue) {
+        if (property == null ) {
             return null;
         }
-        if (value1 instanceof String && value1.equals(value2)) {
-            return value1;
+        if (property instanceof String && property.equals(requiredValue)) {
+            return property;
         }
-        if (value1 instanceof Number && value1.equals(value2)) {
-            return value1;
+        if (property instanceof Number && property.equals(requiredValue)) {
+            return property;
         }
-        if (!(value1 instanceof BehaviorImpl)) {
-            return null;  // we don't support any other types for a property
-        }
-        Description propertyDescription = (Description)value1;
-        Description requiredDescription = (Description)value2;
-        Description matched = propertyDescription.matchFor(requiredDescription);
-        if (matched != null){
-            return matched;
+        if (property instanceof Description && requiredValue instanceof Description) {
+            Description propertyDescription = (Description)property;
+            Description requiredDescription = (Description)requiredValue;
+            Description matched = propertyDescription.specializedFor(requiredDescription);
+            if (matched != null){
+                return matched;
+            }
         }
         return null;
     }

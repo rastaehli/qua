@@ -33,3 +33,22 @@ Feature: Does Description class support all basic ability to reflect on componen
             | "activate" | "active"        |
             | "disAssemble" | "provisioned"        |
 
+    Scenario Outline: Description supports specialization to match another
+        Given two descriptions with <prop> and <dependency> with only <difference>
+        When first is specialized for second
+        Then specialization is <result>
+
+        Examples:
+            | prop      | dependency | difference                          | result  |
+            | "aString" | "aDescription" | "no diff"                           | "match" |
+            | "aString" | "aDescription" | "first only typed"                  | "match" |
+            | "aString" | "aDescription" | "first only provisioned"            | "match" |
+            | "aString" | "aDescription" | "first type different"              | "null"  |
+            | "aString" | "aDescription" | "first missing prop"                | "null"  |
+            | "aDescription" | "aDescription" | "first prop type different"         | "null"  |
+            | "aDescription" | "aDescription" | "first prop only typed"             | "match" |
+            | "aDescription" | "aDescription" | "first prop only provisioned"       | "match" |
+            | "aString" | "aDescription" | "first dependency type different"   | "match"  |
+            | "aString" | "aDescription" | "first dependency only typed"       | "match" |
+            | "aString" | "aDescription" | "first dependency only provisioned" | "match" |
+

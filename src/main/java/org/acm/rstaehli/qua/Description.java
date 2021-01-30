@@ -380,7 +380,7 @@ public class Description {
      * @param goal describes behavior iwe are trying to match
      * @return null or a specialized copy matching goal
      */
-    public Description matchFor(Description goal) {
+    public Description specializedFor(Description goal) {
         Description copy = mutableCopy();
         Behavior specializedBehavior = copy.behavior.specializeFor(goal.behavior());
         if (specializedBehavior == null) {
@@ -465,5 +465,13 @@ public class Description {
         construction.setDependency(key, value);
         computeStatus();
         return this;
+    }
+
+    public Description descriptionDependency(String dependency) {
+        if (construction == null) {
+            return null;
+        } else {
+            return (Description)construction.dependencies().get(dependency);
+        }
     }
 }

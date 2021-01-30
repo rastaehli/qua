@@ -3,7 +3,6 @@ package org.acm.rstaehli.qua;
 import org.acm.rstaehli.qua.exceptions.NoImplementationFound;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 public abstract class AbstractRepository implements Repository {
 
@@ -28,7 +27,7 @@ public abstract class AbstractRepository implements Repository {
 
     private void addAllMatches(List<Description> matches, Collection<Description> candidates, Description goal) {
         for (Description d: candidates) {
-            Description match = d.matchFor(goal);
+            Description match = d.specializedFor(goal);
             if (match != null) {
                 matches.add(match);
             }

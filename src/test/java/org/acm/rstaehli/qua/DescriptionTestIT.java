@@ -50,7 +50,7 @@ public class DescriptionTestIT {
         conformingProperties.put("p3", MATCH_ANY);
         Description conformingDesc = qua.typeAndProperties("goaltype", conformingProperties);
 
-        Description match = conformingDesc.matchFor(goal);
+        Description match = conformingDesc.specializedFor(goal);
         assertTrue(match != conformingDesc);
         assertTrue(match.properties() != conformingDesc.properties());
         assertEquals(match.type(), goal.type());
