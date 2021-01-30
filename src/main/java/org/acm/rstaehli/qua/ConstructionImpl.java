@@ -19,6 +19,14 @@ public class ConstructionImpl implements Construction {
         this.dependencies = dependencies;
     }
 
+    public ConstructionImpl(Description builder) {
+        this(builder, null);
+    }
+
+    public ConstructionImpl() {
+        this(null, null);
+    }
+
     @Override
     public Construction setBuilder(Description builder) {
         this.builderDescription = builder;
@@ -77,14 +85,21 @@ public class ConstructionImpl implements Construction {
     }
 
     @Override
-    public void mergeConstruction(Construction goal) {
+    public Construction mergeConstruction(Construction goal) {
+        if (goal == null) {
+            return this;
+        }
         if (this.builderDescription == null && goal.builderDescription() != null) {
             this.builderDescription = goal.builderDescription();
+            this.dependencies = goal.dependencies();  // retain no old dependencies when builder changes
+            return this;
         }
         if (this.dependencies == null && goal.dependencies() != null) {
             this.dependencies = goal.dependencies();
+            return this;
         }
         Mappings.merge(goal.dependencies(), this.dependencies);
+        return this;
     }
 
 
@@ -102,6 +117,19 @@ public class ConstructionImpl implements Construction {
             descriptions.add(builderDescription);
         }
         return descriptions;
+    }
+
+    @Override
+    public Object dependency(String x) {
+        if (dependencies != null && dependencies.keySet().contains(x)) {
+            Object dependency = dependencies.get(x);
+            if (dependency instanceof Description) {
+                return ((Description) dependency).service();
+            } else {
+                return dependency;
+            }
+        }
+        return null;
     }
 
     public ConstructionImpl mutableCopy() {

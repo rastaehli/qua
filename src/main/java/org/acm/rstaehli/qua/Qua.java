@@ -1,6 +1,7 @@
 package org.acm.rstaehli.qua;
 
 import org.acm.rstaehli.qua.tools.Namespace;
+import sun.security.krb5.internal.crypto.Des;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -58,11 +59,13 @@ public class Qua {
         if (builder != null && dependencies == null) {
             dependencies = new HashMap<>();  // ensure builder and dependencies initialized together
         }
-        return new Description()
+        Description d = new Description()
                 .setType(ns.translate(type))
-                .setProperties(ns.translate(properties))
-                .setConstruction(new ConstructionImpl(builder, ns.translate(dependencies)))
-                .computeStatus();
+                .setProperties(ns.translate(properties));
+        if (builder != null || dependencies != null) {
+            d.setConstruction(new ConstructionImpl(builder, ns.translate(dependencies)));
+        }
+        return d;
     }
 
     public Description type(String type) {

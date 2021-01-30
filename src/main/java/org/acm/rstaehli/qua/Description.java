@@ -3,6 +3,7 @@ package org.acm.rstaehli.qua;
 import com.google.gson.Gson;
 import org.acm.rstaehli.qua.exceptions.NoImplementationFound;
 import org.apache.log4j.Logger;
+import sun.security.krb5.internal.crypto.Des;
 
 import java.util.*;
 
@@ -221,6 +222,7 @@ public class Description {
 
     public Description setConstruction(Construction c) {
         construction = (ConstructionImpl) c;
+        computeStatus();
         return this;
     }
 
@@ -276,26 +278,28 @@ public class Description {
         if (isPlanned()) {
             return this;
         }
-        Description impl = qua.repository().bestMatch(this);
+        Description impl = repository(qua).bestMatch(this);
         if (impl == null) {
             logger.error("no implementation for type: " + this.behavior.type());
             throw new NoImplementationFound("for type: " + this.behavior.type());
         }
 
         behavior.mergeBehavior(impl.behavior);
-        construction = new ConstructionImpl(
-                impl.construction.builderDescription(),
-                impl.construction.dependencies());
+        construction = (ConstructionImpl) (new ConstructionImpl()).mergeConstruction(impl.construction);
         interfaces = impl.interfaces;
-        // don't allow partially planned description
-        for (Description d: childDescriptions()) {
-            if (!d.isPlanned()) {
-                d.plan(qua);
-            }
-        };
 
         computeStatus();
         return this;
+    }
+
+    private Repository repository(Qua qua) {
+        if (qua == null) {
+            throw new IllegalStateException("cannot plan with null Qua context");
+        }
+        if (qua.repository() == null) {
+            throw new IllegalStateException("cannot plan with null repository in Qua context");
+        }
+        return qua.repository();
     }
 
     public Description provision() throws NoImplementationFound {
@@ -363,7 +367,7 @@ public class Description {
             return this;  // already assembled and active
         }
         if (!isAssembled()) {
-            return assemble(qua);
+            assemble(qua);
         }
         construction.builder().start(this);
         status = ACTIVE;
@@ -434,5 +438,32 @@ public class Description {
         }
         copy.computeStatus();
         return copy;
+    }
+
+    public String status() {
+        return status.toString();
+    }
+
+    public Object dependency(String x) {
+        return construction.dependency(x);
+    }
+
+    public Description setBuilder(Description builderDescription) {
+        if (construction == null) {
+            construction = new ConstructionImpl(builderDescription);
+        } else {
+            construction.setBuilder(builderDescription);
+        }
+        computeStatus();
+        return this;
+    }
+
+    public Description setDependency(String key, Object value) {
+        if (construction == null) {
+            construction = new ConstructionImpl(new Description()); // leave builder unknown
+        }
+        construction.setDependency(key, value);
+        computeStatus();
+        return this;
     }
 }

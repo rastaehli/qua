@@ -32,6 +32,8 @@ public interface Construction {
     Construction setDependency(String key, Object value);  // set a dependency value or Description
     Map<String, Object> dependencies();  // null or required dependencies
     boolean equals(Construction other);
-    void mergeConstruction(Construction goal);
+    Construction mergeConstruction(Construction goal);
     List<Description> descriptions();
+
+    Object dependency(String x);
 }
