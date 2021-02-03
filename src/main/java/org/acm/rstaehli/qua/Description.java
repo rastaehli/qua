@@ -216,6 +216,13 @@ public class Description {
         return (List<Description>)properties().get(key);
     }
 
+    public <T> T property(String key, Class<T> classOfT) {
+        if (!properties().containsKey(key)) {
+            throw new IllegalArgumentException("properties missing: " + key);
+        }
+        return classOfT.cast(properties().get(key));
+    }
+
     public Description descriptionProperty(String key) {
         return (Description)properties().get(key);
     }
