@@ -5,6 +5,7 @@ import org.acm.rstaehli.qua.*;
 import org.acm.rstaehli.qua.exceptions.NoImplementationFound;
 
 import java.util.HashMap;
+import java.util.Map;
 
 import static junit.framework.TestCase.assertTrue;
 
@@ -17,6 +18,37 @@ public class StepDefinitions {
     InMemoryRepository repo = new InMemoryRepository();
     Description goal;
     Description specialization;
+    Description testServiceBuilder;
+    TestService service1;
+
+    class TestService {
+        private String name;
+        private TestService child;
+        public TestService(String name, TestService child) {
+            this.name = name;
+            this.child = child;
+        }
+        public String name() {
+            return name + "(" + (child==null?"":child.name()) + ")";
+        }
+    }
+
+    class TestServiceBuilder implements Builder {
+        @Override
+        public void assemble(Description impl) {
+            TestService child = (TestService) impl.descriptionDependency("child").service();
+            impl.setServiceObject(new TestService(impl.stringProperty("name"), child));
+        }
+        @Override
+        public void start(Description impl) {
+        }
+        @Override
+        public void stop(Description impl) {
+        }
+        @Override
+        public void recycle(Description impl) {
+        }
+    }
 
     @Given("description with {string} {string} {string} {string} {string}")
     public void description_with(String type, String value1, String value2, String plan, String service) {
@@ -63,11 +95,15 @@ public class StepDefinitions {
         assertTrue(d.status().equalsIgnoreCase(expectedStatus));
     }
 
+    @Given("qua has in memory repository")
+    public void qua_has_in_memory_repository() {
+        repo = new InMemoryRepository();
+        qua.addRepository(repo);
+    }
+
     @Given("repository with implementations X and Y")
     public void repository_with_implementations_x_and_y() {
         // technically, these are implementations for types X and Y
-        repo = new InMemoryRepository();
-        qua.addRepository(repo);
         repo.advertise(qua.typedService("X", new TestSvc("XName")));
         repo.advertise(qua.typedService("Y", new TestSvc("YName")));
     }
@@ -180,5 +216,77 @@ public class StepDefinitions {
         assertTrue(specialization != d && specialization != goal);
     }
 
+    @Given("repository with TestService impl in active state")
+    public void repository_with_testservice_impl_in_active_state() {
+        repo.advertise(qua.typedService("TestService", new TestService("TestService", null)));
+    }
+
+    @Given("repository with test service builder")
+    public void repository_with_test_service_builder() {
+        testServiceBuilder = qua.typedService("TestServiceBuilder", new TestServiceBuilder());
+        repo.advertise(testServiceBuilder);
+    }
+
+    @Given("repository with Planned impl in planned state")
+    public void repository_with_planned_impl_in_planned_state() {
+        // planned but not provisioned.  Has at lease one dependency that is only typed.
+        Description childService = qua.type("TestService");  // we know impl in repo, but not provisioned here yet
+        Description planned = qua.type("Planned")
+                .setProperty("name", "Planned")
+                .setBuilder(testServiceBuilder)
+                .setDependency("child", childService);
+        repo.advertise(planned);
+    }
+
+    @Given("Provisioned impl in provisioned state")
+    public void provisioned_impl_in_provisioned_state() throws NoImplementationFound {
+        // planned and all dependencies provisioned.
+        Description childService = qua.type("TestService").provision(qua);
+        Description planned = qua.type("Provisioned")
+                .setProperty("name", "Provisioned")
+                .setBuilder(testServiceBuilder)
+                .setDependency("child", childService);
+        repo.advertise(planned);
+    }
+
+    @Given("Assembled impl in assembled state")
+    public void assembled_impl_in_assembled_state() throws NoImplementationFound {
+        Description childService = qua.type("TestService");
+        Description planned = qua.type("Assembled")
+                .setProperty("name", "Assembled")
+                .setBuilder(testServiceBuilder)
+                .setDependency("child", childService)
+                .assemble(qua);
+        repo.advertise(planned);
+    }
+
+    @Given("ActiveNoPlan impl in active state")
+    public void active_no_plan_impl_in_active_state() {
+        TestService svc = new TestService("ActiveNoPlan", null);
+        Description activeNoPlan = qua.type("ActiveNoPlan")
+                .setServiceObject(svc);
+        repo.advertise(activeNoPlan);
+    }
+
+    @Given("Active impl in active state")
+    public void active_impl_in_active_state() throws NoImplementationFound {
+        Description childService = qua.type("TestService");
+        Description planned = qua.type("Active")
+                .setProperty("name", "Active")
+                .setBuilder(testServiceBuilder)
+                .setDependency("child", childService)
+                .activate(qua);
+        repo.advertise(planned);
+    }
+
+    @When("{string} activated service is requested")
+    public void activated_service_is_requested(String type) throws NoImplementationFound {
+        service1 = qua.type(type).service(qua, TestService.class);
+    }
+
+    @Then("service works for {string}")
+    public void service_works_for(String type) {
+        assertTrue(service1.name().startsWith(type));
+    }
 
 }

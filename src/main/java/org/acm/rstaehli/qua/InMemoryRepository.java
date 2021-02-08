@@ -27,7 +27,8 @@ public class InMemoryRepository extends AbstractRepository {
         }
         if (isNamed(impl)) {
             nameMap.put(impl.name(), impl);
-        } else {
+        }
+        if (impl.isTyped()){
             addMapping(impl.type(), impl, typeMap);  // generic implementations by type
         }
     }

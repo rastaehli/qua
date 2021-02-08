@@ -216,6 +216,7 @@ public class Description {
         return (List<Description>)properties().get(key);
     }
 
+    // return expected property type
     public <T> T property(String key, Class<T> classOfT) {
         if (!properties().containsKey(key)) {
             throw new IllegalArgumentException("properties missing: " + key);
@@ -324,9 +325,7 @@ public class Description {
             return plan(qua).provision(qua);
         }
         for (Description d: childDescriptions()) {
-            if (!d.isProvisioned()) {
-                d.provision(qua);
-            }
+            d.provision(qua);
         };
         status = PROVISIONED;
         return this;
@@ -347,7 +346,7 @@ public class Description {
             return this;
         }
         if (!isProvisioned()) {
-            provision(qua);
+            return provision(qua).assemble(qua);
         }
         for (Description d: childDescriptions()) {
             if (!d.isAssembled()) {
@@ -374,7 +373,7 @@ public class Description {
             return this;  // already assembled and active
         }
         if (!isAssembled()) {
-            assemble(qua);
+            return assemble(qua).activate(qua);
         }
         construction.builder().start(this);
         status = ACTIVE;
@@ -480,5 +479,17 @@ public class Description {
         } else {
             return (Description)construction.dependencies().get(dependency);
         }
+    }
+
+    // return expected dependency type
+    public <T> T dependency(String key, Class<T> classOfT) {
+        if (!dependencies().containsKey(key)) {
+            throw new IllegalArgumentException("dependency missing: " + key);
+        }
+        return classOfT.cast(dependencies().get(key));
+    }
+    // return expected service type
+    public <T> T service(Qua qua, Class<T> classOfT) throws NoImplementationFound {
+        return classOfT.cast(service(qua));
     }
 }

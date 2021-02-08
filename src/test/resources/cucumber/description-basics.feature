@@ -3,7 +3,8 @@ Feature: Does Description class support all basic ability to reflect on componen
     - equality, conformance, and specialization to another Description
 
     Scenario Outline: Description constructors yield expected state
-        Given description with <type> <prop1Val> <prop2Val> <plan> <service>
+        Given qua has in memory repository
+        And description with <type> <prop1Val> <prop2Val> <plan> <service>
         When description is constructed
         Then status is <status>
 
@@ -18,7 +19,8 @@ Feature: Does Description class support all basic ability to reflect on componen
             | "typeA" | "v1"     | "v2"     | "null"                              | "svc1"  | "active"      |
 
     Scenario Outline: Description can manipulate component state
-        Given repository with implementations X and Y
+        Given qua has in memory repository
+        And repository with implementations X and Y
         And description for type Z
         And Z implementation with dependencies Y and X
         When description is asked to <action>
@@ -33,8 +35,29 @@ Feature: Does Description class support all basic ability to reflect on componen
             | "activate" | "active"        |
             | "disAssemble" | "provisioned"        |
 
+    Scenario Outline: Description activates from any state
+        Given qua has in memory repository
+        And repository with test service builder
+        And repository with TestService impl in active state
+        And repository with Planned impl in planned state
+        And Provisioned impl in provisioned state
+        And Assembled impl in assembled state
+        And Active impl in active state
+        And ActiveNoPlan impl in active state
+        When <type> activated service is requested
+        Then service works for <type>
+
+        Examples:
+            | type |
+            | "Planned" |
+            | "Provisioned" |
+            | "Assembled" |
+            | "Active" |
+            | "ActiveNoPlan" |
+
     Scenario Outline: Description supports specialization to match another
-        Given two descriptions with <prop> and <dependency> with only <difference>
+        Given qua has in memory repository
+        And two descriptions with <prop> and <dependency> with only <difference>
         When first is specialized for second
         Then specialization is <result>
 
