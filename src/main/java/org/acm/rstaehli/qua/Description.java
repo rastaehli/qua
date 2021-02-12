@@ -9,6 +9,7 @@ import java.util.*;
 
 import static org.acm.rstaehli.qua.Behavior.UNKNOWN_TYPE;
 import static org.acm.rstaehli.qua.Lifecycle.*;
+import static org.acm.rstaehli.qua.Qua.QUA_NAME;
 
 /**
  * Description is a meta object to reflect on and manage the implementation of a service.
@@ -38,27 +39,6 @@ public class Description {
 //    protected Object serviceObject;  // the primary object interface of this description
 //    protected Map<String, String> interfaces;  // repository names of all interfaces
     protected Lifecycle status = UNKNOWN;
-
-
-    public Description(Map<String, Object> jsonObject) {
-        String type = getField(jsonObject, "type", UNKNOWN_TYPE);
-        Map<String, Object> properties = getField(jsonObject, "properties", new HashMap<>());
-        this.behavior = new BehaviorImpl(type, properties);
-
-        Description builderDescription = getField(jsonObject, "builderDescription");
-        if (builderDescription != null) {
-            Map<String, Object> dependencies = getField(jsonObject, "dependencies", new HashMap<>());
-            this.construction = new ConstructionImpl(builderDescription, dependencies);
-        }
-
-        Object serviceObject = getField(jsonObject, PRIMARY_SERVICE_NAME);
-        this.interfaces = getField(jsonObject, "interfaces", new HashMap<>());
-        if (serviceObject != null) {
-            interfaces.put(PRIMARY_SERVICE_NAME, serviceObject);
-        }
-
-        computeStatus();
-    }
 
     public Description() {
         this.behavior = new BehaviorImpl();
@@ -101,62 +81,8 @@ public class Description {
         computeStatus();
     }
 
-    protected  <T> T getField(Map<String,Object> o, String fieldName) {
-        return getField(o, fieldName, null);
-    }
-
-    /**
-     * Get concrete Description field type from Json object map
-     * @param jsonObject
-     * @param fieldName within jsonObject
-     * @param defaultValue to return of field is not set
-     * @param <T> return type of jsonObject value
-     * @return
-     */
-    protected <T> T getField(Map<String,Object> jsonObject, String fieldName, T defaultValue) {
-        if (jsonObject.containsKey(fieldName)) {
-            Object value = jsonObject.get(fieldName);
-            if (value instanceof Map) {
-                if (fieldName.equals("properties") || fieldName.equals("dependencies")) {
-                    value = mapSupportingNestedDescriptions((Map<String, Object>)value);
-                } else {
-                    value = new Description((Map<String, Object>)value);
-                }
-            }
-            return (T)value;
-        } else {
-            return defaultValue;
-        }
-    }
-
-    /**
-     * return a properties or dependencies map, but inspect all key/value pairs to correctly deserialize nested Descriptions
-     * @param map
-     * @return
-     */
-    private Map<String, Object> mapSupportingNestedDescriptions(Map<String, Object> map) {
-        for (String key: map.keySet()) {
-            Object value = map.get(key);
-            if (value instanceof Map) {  // restriction: all map values in properties or dependencies are Descriptions
-                Description desc = new Description((Map<String,Object>)value);
-                map.put(key, desc);
-            } else if (value instanceof List) {
-                List<Object> newList = new ArrayList();
-                for (Object o: (List)value) {
-                    if (o instanceof Map) {
-                        newList.add( new Description((Map<String, Object>)o));
-                    } else {
-                        newList.add(o);
-                    }
-                }
-                map.put(key, newList);  // replace old list with Descriptions from Maps
-            }
-        }
-        return map;
-    }
-
     public Description setName(String n) {
-        behavior.setProperty("name",n);
+        behavior.setProperty(QUA_NAME,n);
         return this;
     }
 
@@ -185,7 +111,7 @@ public class Description {
     }
 
     public String name() {
-        return stringProperty("name");
+        return stringProperty(QUA_NAME);
     }
 
     public String type() {
@@ -286,7 +212,12 @@ public class Description {
         if (isPlanned()) {
             return this;
         }
-        Description impl = repository(qua).bestMatch(this);
+        Description impl = null;
+        if (this.name() != null) {
+            impl = repository(qua).implementationByName(this.name());
+        } else {
+            impl = repository(qua).bestMatch(this);
+        }
         if (impl == null) {
             logger.error("no implementation for type: " + this.behavior.type());
             throw new NoImplementationFound("for type: " + this.behavior.type());
@@ -461,6 +392,14 @@ public class Description {
             construction.setBuilder(builderDescription);
         }
         computeStatus();
+        return this;
+    }
+
+    public Description setDependencies(Map<String,Object> map) {
+        if (construction == null) {
+            construction = new ConstructionImpl(new Description());
+        }
+        construction.setDependencies(map);
         return this;
     }
 

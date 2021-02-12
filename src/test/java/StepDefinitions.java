@@ -2,10 +2,11 @@ import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import org.acm.rstaehli.qua.*;
+import org.acm.rstaehli.qua.builders.DescriptionBuilder;
+import org.acm.rstaehli.qua.builders.HashMapBuilder;
 import org.acm.rstaehli.qua.exceptions.NoImplementationFound;
 
 import java.util.HashMap;
-import java.util.Map;
 
 import static junit.framework.TestCase.assertTrue;
 
@@ -15,40 +16,13 @@ public class StepDefinitions {
     Qua qua = new Qua();
     Construction plan1;
     Builder builder1;
-    InMemoryRepository repo = new InMemoryRepository();
+    Repository repo = new InMemoryRepository();
+    FileBasedRepository fileBasedRepo;
     Description goal;
     Description specialization;
     Description testServiceBuilder;
     TestService service1;
-
-    class TestService {
-        private String name;
-        private TestService child;
-        public TestService(String name, TestService child) {
-            this.name = name;
-            this.child = child;
-        }
-        public String name() {
-            return name + "(" + (child==null?"":child.name()) + ")";
-        }
-    }
-
-    class TestServiceBuilder implements Builder {
-        @Override
-        public void assemble(Description impl) {
-            TestService child = (TestService) impl.descriptionDependency("child").service();
-            impl.setServiceObject(new TestService(impl.stringProperty("name"), child));
-        }
-        @Override
-        public void start(Description impl) {
-        }
-        @Override
-        public void stop(Description impl) {
-        }
-        @Override
-        public void recycle(Description impl) {
-        }
-    }
+    Description resultDesc;
 
     @Given("description with {string} {string} {string} {string} {string}")
     public void description_with(String type, String value1, String value2, String plan, String service) {
@@ -227,8 +201,8 @@ public class StepDefinitions {
         repo.advertise(testServiceBuilder);
     }
 
-    @Given("repository with Planned impl in planned state")
-    public void repository_with_planned_impl_in_planned_state() {
+    @Given("Planned impl in planned state")
+    public void planned_impl_in_planned_state() {
         // planned but not provisioned.  Has at lease one dependency that is only typed.
         Description childService = qua.type("TestService");  // we know impl in repo, but not provisioned here yet
         Description planned = qua.type("Planned")
@@ -279,14 +253,100 @@ public class StepDefinitions {
         repo.advertise(planned);
     }
 
+    @Given("repository with active TestService named {string}")
+    public void repository_with_active_test_service_named(String name) {
+        repo.advertise(qua.namedService(name, new TestService(name, null)));
+    }
+    @Given("repository with active TestService named null")
+    public void repository_with_active_test_service_named_null() {
+        // this is guaranteed by planned TestService
+    }
+
+    @Given("repository with planned TestService impl")
+    public void repository_with_planned_test_service_impl() {
+        repo.advertise(qua.typeAndPlan("TestService", testServiceBuilder));
+    }
+
     @When("{string} activated service is requested")
     public void activated_service_is_requested(String type) throws NoImplementationFound {
         service1 = qua.type(type).service(qua, TestService.class);
     }
 
     @Then("service works for {string}")
-    public void service_works_for(String type) {
-        assertTrue(service1.name().startsWith(type));
+    public void service_works_for(String name) {
+        assertTrue(service1.name().startsWith(name));
+    }
+
+    @When("{string} and {string} activated service is requested")
+    public void and_activated_service_is_requested(String name, String type) {
+        Description d = new Description();
+        if (type != null) {
+            d.setType(type);
+        }
+        if (name != null) {
+            d.setName(name);
+        }
+        try {
+            service1 = (TestService) d.service(qua);
+        } catch (NoImplementationFound noImplementationFound) {
+            throw new IllegalStateException(noImplementationFound);
+        }
+    }
+
+    @Then("service works for null")
+    public void service_works_for_null() {
+        assertTrue(service1.name().startsWith("("));
+    }
+
+    @When("null and {string} activated service is requested")
+    public void null_and_activated_service_is_requested(String type) {
+        Description d = new Description();
+        d.setType(type);
+        try {
+            service1 = (TestService) d.service(qua);
+        } catch (NoImplementationFound noImplementationFound) {
+            throw new IllegalStateException(noImplementationFound);
+        }
+    }
+
+    @When("{string} and null activated service is requested")
+    public void and_null_activated_service_is_requested(String name) {
+        Description d = new Description();
+        d.setName(name);
+        try {
+            service1 = (TestService) d.service(qua);
+        } catch (NoImplementationFound noImplementationFound) {
+            throw new IllegalStateException(noImplementationFound);
+        }
+    }
+
+    @Given("qua has file based repository with {string} and {string}")
+    public void qua_has_file_based_repository_with_and(String directory, String builderClassName) {
+        Description bDesc = null;
+        Class bClass = null;
+        switch (builderClassName) {
+            case "MapBuilder":
+                bDesc = qua.namedService("mapBuilder", new HashMapBuilder());
+                break;
+            case "DescriptionBuilder":
+                bDesc = qua.namedService("descriptionBuilder", new DescriptionBuilder());
+                break;
+            case "TestServiceBuilder":
+                bDesc = qua.namedService("testServiceBuilder", new TestServiceBuilder());
+                break;
+            default: throw new IllegalArgumentException("unknown builder type: " + builderClassName);
+        }
+        fileBasedRepo = new FileBasedRepository(directory, "", bDesc, qua);
+    }
+
+    @When("service {string} is retrieved")
+    public void service_is_retrieved(String name) throws NoImplementationFound {
+        resultDesc = fileBasedRepo.buildByName(name);
+    }
+
+    @Then("service instance type is {string}")
+    public void service_instance_type_is(String type) {
+        assertTrue(resultDesc.service().getClass().getSimpleName().equals(type));
     }
 
 }

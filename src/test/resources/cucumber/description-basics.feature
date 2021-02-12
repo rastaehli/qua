@@ -39,7 +39,7 @@ Feature: Does Description class support all basic ability to reflect on componen
         Given qua has in memory repository
         And repository with test service builder
         And repository with TestService impl in active state
-        And repository with Planned impl in planned state
+        And Planned impl in planned state
         And Provisioned impl in provisioned state
         And Assembled impl in assembled state
         And Active impl in active state
@@ -75,3 +75,16 @@ Feature: Does Description class support all basic ability to reflect on componen
             | "aString" | "aDescription" | "first dependency only typed"       | "match" |
             | "aString" | "aDescription" | "first dependency only provisioned" | "match" |
 
+    Scenario Outline: Description activates by name or type
+        Given qua has in memory repository
+        And repository with test service builder
+        And repository with active TestService named <name>
+        And repository with planned TestService impl
+        When <name> and <type> activated service is requested
+        Then service works for <name>
+
+        Examples:
+            | name | type |
+            | "anyName" | "TestService" |
+            | null | "TestService" |
+            | "anyName" | null |

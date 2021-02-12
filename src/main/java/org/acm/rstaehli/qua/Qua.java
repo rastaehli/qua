@@ -15,6 +15,7 @@ import static org.acm.rstaehli.qua.Behavior.UNKNOWN_TYPE;
  */
 public class Qua {
 
+    public static final String QUA_NAME = "http://github.com/rstaehli/name";
     private Namespace ns;
     private Repository repo;
 
@@ -28,6 +29,8 @@ public class Qua {
 
     public Qua(Map<String,String> namespaces, Repository r) {
         this.ns = new Namespace(namespaces);
+        // always include namespace for QuA built in names
+        this.ns.addMapping("qua", "http://github.com/rstaehli/");
         this.repo = r;
     }
 

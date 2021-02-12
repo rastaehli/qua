@@ -1,0 +1,6 @@
+{
+    "name": "test service 1",
+    "child": {
+        "name": "test service child"
+    }
+}

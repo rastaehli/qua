@@ -1,6 +1,7 @@
 package org.acm.rstaehli.qua.tools;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
 
 import static org.acm.rstaehli.qua.BehaviorImpl.MATCH_ANY;
@@ -29,6 +30,9 @@ public class Namespace {
     }
 
     public Namespace addMapping(String prefix, String fullName) {
+        if (prefixMap == null) {
+            prefixMap = new HashMap<>();
+        }
         prefixMap.put(prefix, fullName);
         return this;
     }

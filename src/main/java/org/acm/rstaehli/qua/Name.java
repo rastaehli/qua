@@ -17,4 +17,11 @@ public class Name {
         return name;
     }
 
+    // return just the part after the repositoryName prefix
+    public static String keyPart(String name, String repositoryName) {
+        if (name.startsWith(repositoryName)) {
+            return name.substring(repositoryName.length());
+        }
+        return name;
+    }
 }

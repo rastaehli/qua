@@ -1,7 +1,7 @@
 package org.acm.rstaehli.qua;
 
 import org.acm.rstaehli.qua.exceptions.NoImplementationFound;
-import org.acm.rstaehli.qua.tools.Serializer;
+import org.acm.rstaehli.qua.tools.DescriptionSerializer;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -16,15 +16,12 @@ import static org.acm.rstaehli.qua.BehaviorImpl.MATCH_ANY;
 public class DescriptionTestIT {
     private Description desc;
     private Repository repo;
-    private Serializer serializer;
     private Qua qua;
 
     @Before
     public void setUp() throws IOException {
         qua = new Qua();
         repo = new FileBasedRepository("src/test/resources/descriptionCases/", qua);
-//        repo.advertise(JvmObjectBuilder(Class cls, List<Class> constructorArgTypes, List<Object> ));
-        serializer = new Serializer();
         qua = new Qua();
     }
 
