@@ -28,12 +28,8 @@ public class FileBasedDescriptionRepository extends FileBasedStringRepository {
     private JsonSerializer jsonSerializer;
     private final DescriptionSerializer descriptionSerializer;
 
-    public FileBasedDescriptionRepository(String dir, Qua q) {
-        this(dir, "", q);
-    }
-
     public FileBasedDescriptionRepository(String directory, String prefix, Qua qua) {
-        super(directory, prefix, qua);
+        super(directory, prefix, ".json", qua);  // look for .json files
         this.jsonSerializer = new JsonSerializer();
         this.descriptionSerializer = new DescriptionSerializer();
         this.qua.addRepository(this);

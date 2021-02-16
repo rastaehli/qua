@@ -20,7 +20,7 @@ public class DescriptionTest {
     @Before
     public void setUp() throws IOException {
         qua = new Qua();
-        repo = new FileBasedDescriptionRepository("src/test/resources/descriptionCases/", qua);
+        repo = new FileBasedDescriptionRepository("src/test/resources/descriptionCases/", "", qua);
     }
 
     @Test

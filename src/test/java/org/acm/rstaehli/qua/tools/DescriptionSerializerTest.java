@@ -1,5 +1,6 @@
 package org.acm.rstaehli.qua.tools;
 
+import org.acm.rstaehli.qua.FileBasedDescriptionRepository;
 import org.acm.rstaehli.qua.FileBasedRepository;
 import org.acm.rstaehli.qua.Qua;
 import org.junit.Before;
@@ -17,13 +18,13 @@ public class DescriptionSerializerTest {
     private Description desc;
     private String dir;
     private DescriptionSerializer descriptionSerializer;
-    private FileBasedRepository repo;
+    private FileBasedDescriptionRepository repo;
 
     @Before
     public void setUp() throws IOException {
         qua = new Qua(null);
         dir = "src/test/resources/descriptionCases/";
-        repo = new FileBasedRepository(dir,qua);
+        repo = new FileBasedDescriptionRepository(dir, "", qua);
         descriptionSerializer = new DescriptionSerializer();
     }
 

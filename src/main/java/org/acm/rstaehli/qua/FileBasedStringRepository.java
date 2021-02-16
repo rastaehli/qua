@@ -24,15 +24,13 @@ public class FileBasedStringRepository extends AbstractRepository {
     protected AbstractRepository cacheRepository;
     protected String fileDirectoryPath;
     protected String repositoryName;  // prefix for names found in this repository
+    protected String fileSuffix;  // file extension for names found in this repository
 
-    public FileBasedStringRepository(String dir, Qua qua) {
-        this(dir, "", qua);
-    }
-
-    public FileBasedStringRepository(String directory, String prefix, Qua qua) {
+    public FileBasedStringRepository(String directory, String prefix, String suffix, Qua qua) {
         super();
         this.cacheRepository = new InMemoryRepository();
         this.fileDirectoryPath = directory;
+        this.fileSuffix = suffix;
         this.repositoryName = prefix;
         this.qua = qua;
     }

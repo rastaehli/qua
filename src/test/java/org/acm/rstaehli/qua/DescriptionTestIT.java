@@ -20,7 +20,7 @@ public class DescriptionTestIT {
     @Before
     public void setUp() {
         qua = new Qua();
-        repo = new FileBasedDescriptionRepository("src/test/resources/descriptionCases/", qua);
+        repo = new FileBasedDescriptionRepository("src/test/resources/descriptionCases/", "", qua);
         qua = new Qua();
     }
 

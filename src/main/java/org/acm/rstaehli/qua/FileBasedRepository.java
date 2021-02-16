@@ -33,12 +33,8 @@ public class FileBasedRepository extends FileBasedDescriptionRepository {
     private String resultType;  // type of builder result
     private JsonSerializer jsonSerializer;
 
-    public FileBasedRepository(String dir, Qua q) {
-        this(dir, "", null, q);
-    }
-
     public FileBasedRepository(String directory, String prefix, Description builderDesc, Qua qua) {
-        super(directory, qua);
+        super(directory, prefix, qua);
         this.builderDesc = builderDesc;
         this.jsonSerializer = new JsonSerializer();
         this.qua.addRepository(this);
