@@ -77,7 +77,7 @@ Feature: Does Description class support all basic ability to reflect on componen
 
     Scenario Outline: Description activates by name or type
         Given qua has in memory repository
-        And repository with test service builder
+        And repository with test service map builder
         And repository with active TestService named <name>
         And repository with planned TestService impl
         When <name> and <type> activated service is requested

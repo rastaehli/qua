@@ -8,4 +8,6 @@ public interface Builder {
     void stop(Description impl);  // disable further service activity
 
     void recycle(Description impl);  // release resources
+
+    String resultType();
 }

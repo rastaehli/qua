@@ -1,5 +1,6 @@
 package org.acm.rstaehli.qua;
 
+import org.acm.rstaehli.qua.exceptions.NoImplementationFound;
 import org.acm.rstaehli.qua.tools.Namespace;
 import sun.security.krb5.internal.crypto.Des;
 
@@ -106,4 +107,8 @@ public class Qua {
         return d.mutableCopy();
     }
 
+    public <T> T findByName(String name, Class<T> c) throws NoImplementationFound {
+        Description d = repository().implementationByName(name);
+        return c.cast(d.service(this));
+    }
 }

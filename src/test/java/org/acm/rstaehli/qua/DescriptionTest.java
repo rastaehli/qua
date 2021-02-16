@@ -1,7 +1,6 @@
 package org.acm.rstaehli.qua;
 
 import org.acm.rstaehli.qua.exceptions.NoImplementationFound;
-import org.acm.rstaehli.qua.tools.DescriptionSerializer;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -21,8 +20,7 @@ public class DescriptionTest {
     @Before
     public void setUp() throws IOException {
         qua = new Qua();
-        repo = new FileBasedRepository("src/test/resources/descriptionCases/", qua);
-//        repo.advertise(JvmObjectBuilder(Class cls, List<Class> constructorArgTypes, List<Object> ));
+        repo = new FileBasedDescriptionRepository("src/test/resources/descriptionCases/", qua);
     }
 
     @Test

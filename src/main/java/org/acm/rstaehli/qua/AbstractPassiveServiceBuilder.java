@@ -2,6 +2,8 @@ package org.acm.rstaehli.qua;
 
 import org.acm.rstaehli.qua.exceptions.NoImplementationFound;
 
+import static org.acm.rstaehli.qua.Behavior.UNKNOWN_TYPE;
+
 public class AbstractPassiveServiceBuilder implements Builder {
     @Override
     public void assemble(Description impl) {
@@ -25,5 +27,10 @@ public class AbstractPassiveServiceBuilder implements Builder {
     @Override
     public void recycle(Description impl) {
 
+    }
+
+    @Override
+    public String resultType() {
+        return UNKNOWN_TYPE;
     }
 }

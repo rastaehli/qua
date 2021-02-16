@@ -1,5 +1,6 @@
 package org.acm.rstaehli.qua.tools;
 
+import org.acm.rstaehli.qua.AbstractPassiveServiceBuilder;
 import org.acm.rstaehli.qua.Builder;
 import org.acm.rstaehli.qua.Description;
 import org.acm.rstaehli.qua.Plan;
@@ -15,7 +16,7 @@ import java.util.List;
  * Builds a local JVM object of type aClass with the given constructorArgs.
  * For example, a Point with arguments Integer 5 and Integer -8.
  */
-class JvmObjectBuilder implements Builder {
+class JvmObjectBuilder extends AbstractPassiveServiceBuilder {
 
     public static String BUILD_NAMESPACE = "http://org.acm.rstaehli/ns/build/";
 
@@ -85,15 +86,4 @@ class JvmObjectBuilder implements Builder {
         }
     }
 
-    @Override
-    public void start(Description impl) {
-    }
-
-    @Override
-    public void stop(Description impl) {
-    }
-
-    @Override
-    public void recycle(Description impl) {
-    }
 }

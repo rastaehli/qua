@@ -2,11 +2,11 @@ import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import org.acm.rstaehli.qua.*;
-import org.acm.rstaehli.qua.builders.DescriptionBuilder;
 import org.acm.rstaehli.qua.builders.HashMapBuilder;
 import org.acm.rstaehli.qua.exceptions.NoImplementationFound;
 
 import java.util.HashMap;
+import java.util.Map;
 
 import static junit.framework.TestCase.assertTrue;
 
@@ -17,10 +17,11 @@ public class StepDefinitions {
     Construction plan1;
     Builder builder1;
     Repository repo = new InMemoryRepository();
-    FileBasedRepository fileBasedRepo;
+    Repository fileBasedRepo;
     Description goal;
     Description specialization;
     Description testServiceBuilder;
+    Description testServiceMapBuilder;
     TestService service1;
     Description resultDesc;
 
@@ -82,7 +83,7 @@ public class StepDefinitions {
         repo.advertise(qua.typedService("Y", new TestSvc("YName")));
     }
 
-    class TestBuilder implements Builder {
+    class TestBuilder extends AbstractPassiveServiceBuilder {
         @Override
         public void assemble(Description impl) {
             TestSvc svc = new TestSvc(
@@ -264,7 +265,11 @@ public class StepDefinitions {
 
     @Given("repository with planned TestService impl")
     public void repository_with_planned_test_service_impl() {
-        repo.advertise(qua.typeAndPlan("TestService", testServiceBuilder));
+        Description impl = qua.typeAndPlan("TestService", testServiceMapBuilder);
+        Map<String,Object> map = new HashMap<>();
+        map.put("name","in-mem-testObject");
+        impl.setProperty("map", map);
+        repo.advertise(impl);
     }
 
     @When("{string} activated service is requested")
@@ -295,7 +300,14 @@ public class StepDefinitions {
 
     @Then("service works for null")
     public void service_works_for_null() {
-        assertTrue(service1.name().startsWith("("));
+        assertTrue(service1.name().equals("in-mem-testObject()"));
+    }
+
+
+    @Given("repository with test service map builder")
+    public void repository_with_test_service_map_builder() {
+        testServiceMapBuilder = qua.typedService("TestServiceMapBuilder", new TestServiceMapBuilder());
+        repo.advertise(testServiceMapBuilder);
     }
 
     @When("null and {string} activated service is requested")
@@ -320,33 +332,33 @@ public class StepDefinitions {
         }
     }
 
-    @Given("qua has file based repository with {string} and {string}")
-    public void qua_has_file_based_repository_with_and(String directory, String builderClassName) {
+    @Given("qua has file based {string} repository with {string}")
+    public void qua_has_file_based_repository_with(String resultType, String directory) {
         Description bDesc = null;
-        Class bClass = null;
-        switch (builderClassName) {
-            case "MapBuilder":
+        switch (resultType) {
+            case "Map":
                 bDesc = qua.namedService("mapBuilder", new HashMapBuilder());
+                fileBasedRepo = new FileBasedRepository(directory, "", bDesc, qua);
                 break;
-            case "DescriptionBuilder":
-                bDesc = qua.namedService("descriptionBuilder", new DescriptionBuilder());
+            case "Description":
+                fileBasedRepo = new FileBasedDescriptionRepository(directory, "", qua);
                 break;
-            case "TestServiceBuilder":
-                bDesc = qua.namedService("testServiceBuilder", new TestServiceBuilder());
+            case "TestService":
+                bDesc = qua.namedService("testServiceMapBuilder", new TestServiceMapBuilder());
+                fileBasedRepo = new FileBasedRepository(directory, "", bDesc, qua);
                 break;
-            default: throw new IllegalArgumentException("unknown builder type: " + builderClassName);
+            default: throw new IllegalArgumentException("unknown resultType: " + resultType);
         }
-        fileBasedRepo = new FileBasedRepository(directory, "", bDesc, qua);
     }
 
     @When("service {string} is retrieved")
     public void service_is_retrieved(String name) throws NoImplementationFound {
-        resultDesc = fileBasedRepo.buildByName(name);
+        resultDesc = fileBasedRepo.implementationByName(name);
     }
 
     @Then("service instance type is {string}")
     public void service_instance_type_is(String type) {
-        assertTrue(resultDesc.service().getClass().getSimpleName().equals(type));
+        assertTrue(resultDesc.type().equals(type));
     }
 
 }

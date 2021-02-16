@@ -30,7 +30,7 @@ public class QuaTest {
         assertTrue(obj instanceof Map<?,?>);
     }
 
-    class Concatenator implements Builder {
+    class Concatenator extends AbstractPassiveServiceBuilder {
 
         @Override
         public void assemble(Description impl) {

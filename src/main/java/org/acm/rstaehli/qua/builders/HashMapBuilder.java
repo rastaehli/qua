@@ -17,4 +17,9 @@ public class HashMapBuilder extends AbstractPassiveServiceBuilder {
                 impl.setServiceObject(jsonMap);
             };
         }
+
+    @Override
+    public String resultType() {
+        return "Map";
+    }
     }
