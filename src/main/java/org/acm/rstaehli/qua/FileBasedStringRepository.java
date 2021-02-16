@@ -47,7 +47,7 @@ public class FileBasedStringRepository extends AbstractRepository {
             if (path.length() > 1) {
                 path += path.endsWith("/") ? "" : "/";  // add trailing separator if missing
             }
-            fileName = path + name + ".json";
+            fileName = path + name + fileSuffix;
             try {
                 byte[] bytes = Files.readAllBytes(Paths.get(fileName));
                 contents = new String(bytes, Charset.defaultCharset());
