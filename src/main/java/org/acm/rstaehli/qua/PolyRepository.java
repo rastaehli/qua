@@ -27,23 +27,26 @@ public class PolyRepository extends CachingRepository {
     }
 
     public void advertise(Description impl) {
+        boolean advertised = false;
         if (impl.name() != null) {
-            Repository repo = repoForName(impl.name());
-            if (repo != null) {
-                repo.advertise(impl);
-                return;
+            for (Repository repo: reposForName(impl.name())) {
+                    repo.advertise(impl);
+                    advertised = true;
             }
         }
-        cacheRepository.advertise(impl);  // should consider persisting in file??
+        if (!advertised) {
+            cacheRepository.advertise(impl);
+        }
     }
 
-    private Repository repoForName(String name) {
+    private List<Repository> reposForName(String name) {
+        List<Repository> repos = new ArrayList<>();
         for (String prefix: repositories.keySet()) {
             if (name.toUpperCase().startsWith(prefix.toUpperCase())) {
-                return repositories.get(prefix);
+                repos.add( repositories.get(prefix) );
             }
         }
-        return null;
+        return repos;
     }
 
     @Override
@@ -54,9 +57,11 @@ public class PolyRepository extends CachingRepository {
         } catch(NoImplementationFound e) {
             logger.debug("no cached implementation for repositoryName: " + fullName);
         }
-        Repository repo = repoForName(fullName);
-        if (repo != null) {
-            return repo.implementationByName(fullName);
+        for (Repository repo: reposForName(fullName)) {
+            Description impl = repo.implementationByName(fullName);
+            if (impl != null) {
+                return impl;
+            }
         }
         return null;
     }
@@ -64,8 +69,7 @@ public class PolyRepository extends CachingRepository {
     @Override
     public List<Description> implementationsMatching(Description d) {
         List<Description> found = new ArrayList<>();
-        Repository repo = repoForName(d.type());
-        if (repo != null) {
+        for (Repository repo: reposForName(d.type())) {
             found.addAll( repo.implementationsMatching(d) );
         }
         found.addAll( cacheRepository.implementationsMatching(d) );
@@ -76,8 +80,7 @@ public class PolyRepository extends CachingRepository {
     public List<Description> implementationsByType(String type) {
         List<Description> found = new ArrayList<>();
         String fullName = qua.translate(repositoryName);
-        Repository repo = repoForName(fullName);
-        if (repo != null) {
+        for (Repository repo: reposForName(fullName)) {
             found.addAll( repo.implementationsByType(fullName) );
         }
         found.addAll( cacheRepository.implementationsByType(fullName) );
