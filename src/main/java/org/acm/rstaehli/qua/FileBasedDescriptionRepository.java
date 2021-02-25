@@ -16,8 +16,8 @@ import static org.acm.rstaehli.qua.Behavior.UNKNOWN_TYPE;
 
 /**
  * Read named implementations from json-serialized Description file.
- * Configure with <directory> for files, and logical repo name <prefix>.
- * Then, an objects with name of the form <prefix>/<filename> is expected to be
+ * Configure with <directory> for files, and logical repo repositoryName <prefix>.
+ * Then, an objects with repositoryName of the form <prefix>/<filename> is expected to be
  * found in the file <directory>/<filename>.json.
  * Use in-memory repository to cache implementations already read.
  */
@@ -61,7 +61,7 @@ public class FileBasedDescriptionRepository extends FileBasedStringRepository {
     }
 
     private void inheritFrom(Map<String,Object> parent, Map<String, Object> child) {
-        List<String> fields = Arrays.asList("name", "type", "builderDescription", "serviceObject");
+        List<String> fields = Arrays.asList("repositoryName", "type", "builderDescription", "serviceObject");
         for (String fieldName: fields) {
             inherit(fieldName, parent, child);
         }
@@ -108,19 +108,20 @@ public class FileBasedDescriptionRepository extends FileBasedStringRepository {
         try {
             return cacheRepository.implementationByName(fullName);
         } catch(NoImplementationFound e) {
-            logger.debug("no cached implementation for name: " + fullName);
+            logger.debug("no cached implementation for repositoryName: " + fullName);
         }
         // next look in file system
         String fileName = Name.keyPart(fullName, repositoryName);
         Map<String,Object> map = mapFromFileWithInheritance(fileName, fileDirectoryPath);
         Description desc = descriptionSerializer.descriptionFromMap( map );
         desc.plan(qua);  // don't bother to return unless it is fully planned
-        desc.setName(fullName);  // ensure name is part of description so advertise does not map by type
+        desc.setName(fullName);  // ensure repositoryName is part of description so advertise does not map by type
         cacheRepository.advertise( desc );  // cache named instance to avoid rereading the file
         return desc;
     }
 
     private String resultType() {
+        // type of the description is unknown in general
        return UNKNOWN_TYPE;
     }
 

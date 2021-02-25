@@ -10,4 +10,7 @@ public interface Repository {
     List<Description> implementationsMatching(Description desc);
     Description implementationByName(String name) throws NoImplementationFound;
     Description bestMatch(Description desc) throws NoImplementationFound;
+    List<Description> implementationsByType(String type);
+
+    String name();  // repo repositoryName is prefix for all names defined within it
 }

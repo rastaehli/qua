@@ -10,9 +10,10 @@ import static org.acm.rstaehli.qua.BehaviorImpl.MATCH_ANY;
 public class InMemoryRepository extends AbstractRepository {
 
     private Map<String, List<Description>> typeMap;  // support lookup by type
-    private Map<String, Description> nameMap;  // lookup by name
+    private Map<String, Description> nameMap;  // lookup by repositoryName
 
-    public InMemoryRepository() {
+    public InMemoryRepository(String name) {
+        super(name);
         typeMap = new HashMap<>();
         nameMap = new HashMap<>();
     }
@@ -59,13 +60,13 @@ public class InMemoryRepository extends AbstractRepository {
     public Description implementationByName(String name) throws NoImplementationFound {
         Description match = nameMap.get(name);
         if (match == null) {
-            throw new NoImplementationFound("for name: " + name);
+            throw new NoImplementationFound("for repositoryName: " + name);
         }
         return match;
     }
 
     @Override
-    protected Collection<Description> implementationsByType(String type) {
+    public List<Description> implementationsByType(String type) {
         List<Description> matches = typeMap.get(type);
         if (matches == null || matches.size() < 1) {
             return new ArrayList<>();

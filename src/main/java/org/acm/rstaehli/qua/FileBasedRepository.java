@@ -17,8 +17,8 @@ import static org.acm.rstaehli.qua.Behavior.UNKNOWN_TYPE;
 
 /**
  * Build "resultType" from json representation in file.
- * Configure with <directory> for files, and logical repo name <prefix>.
- * Then, an objects with name of the form <prefix>/<filename> is expected to be
+ * Configure with <directory> for files, and logical repo repositoryName <prefix>.
+ * Then, an objects with repositoryName of the form <prefix>/<filename> is expected to be
  * found in the file <directory>/<filename>.json.
  * Use in-memory repository for implementations already read, and for
  * implementations not from file.
@@ -28,6 +28,8 @@ import static org.acm.rstaehli.qua.Behavior.UNKNOWN_TYPE;
 public class FileBasedRepository extends FileBasedDescriptionRepository {
 
     private static final Logger logger = Logger.getLogger(FileBasedRepository.class);
+
+    public static final String MAP_DEPENDENCY = "map";
 
     private Description builderDesc;  // builds from json map file
     private String resultType;  // type of builder result
@@ -46,23 +48,23 @@ public class FileBasedRepository extends FileBasedDescriptionRepository {
         try {
             return cacheRepository.implementationByName(fullName);
         } catch(NoImplementationFound e) {
-            logger.debug("no cached implementation for name: " + fullName);
+            logger.debug("no cached implementation for repositoryName: " + fullName);
         }
         // next look in file system
         String fileName = Name.keyPart(fullName, repositoryName);
         Map<String,Object> map = mapFromFileWithInheritance(fileName, fileDirectoryPath);
         Description desc = qua.typeAndPlan(resultType(), builderDesc);
-        desc.setDependency("jobProperties", map);
+        desc.setDependency(MAP_DEPENDENCY, map);
 
         if (desc != null) {
-            desc.setName(fullName);  // ensure name is part of description so advertise does not map by type
+            desc.setName(fullName);  // ensure repositoryName is part of description so advertise does not map by type
             cacheRepository.advertise( desc );  // cache named instance to avoid rereading the file
         }
         return desc;
     }
 
     private String resultType() {
-        if (resultType == null) {
+        if (resultType == null || resultType == UNKNOWN_TYPE) {
             try {
                 resultType = ((Builder) builderDesc.service(qua)).resultType();
             } catch (NoImplementationFound noImplementationFound) {

@@ -2,7 +2,6 @@ package org.acm.rstaehli.qua;
 
 import org.acm.rstaehli.qua.exceptions.NoImplementationFound;
 import org.acm.rstaehli.qua.tools.Namespace;
-import sun.security.krb5.internal.crypto.Des;
 
 import java.util.HashMap;
 import java.util.Map;

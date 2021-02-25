@@ -24,4 +24,11 @@ public class Name {
         }
         return name;
     }
+
+    public static String prefix(String name) {
+        if (name == null) {
+            return "";
+        }
+        return name.substring(0, name.length() - keyPart(name).length());
+    }
 }

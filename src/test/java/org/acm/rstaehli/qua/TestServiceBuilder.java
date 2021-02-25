@@ -9,7 +9,7 @@ import org.acm.rstaehli.qua.TestService;
 import java.util.Map;
 
 /**
- * Given a name property and optional child dependency
+ * Given a repositoryName property and optional child dependency
  * assemble a TestService.
  */
 public class TestServiceBuilder extends AbstractPassiveServiceBuilder {
@@ -18,18 +18,18 @@ public class TestServiceBuilder extends AbstractPassiveServiceBuilder {
 
     @Override
     public void assemble(Description impl) {
-        if (!impl.hasProperty("name")) {
-            throw new IllegalArgumentException("TestServiceBuilder cannot find name property in description.");
+        if (!impl.hasProperty("repositoryName")) {
+            throw new IllegalArgumentException("TestServiceBuilder cannot find repositoryName property in description.");
         }
         TestService child = impl.dependencies().containsKey("child")
                 ? (TestService) impl.dependency("child")
                 : null;
-        TestService result = new TestService(impl.stringProperty("name"), child);
+        TestService result = new TestService(impl.stringProperty("repositoryName"), child);
         impl.setServiceObject(result);
     }
 
     private TestService buildFromMap(Map map) {
-        String name = (String) map.get("name");
+        String name = (String) map.get("repositoryName");
         TestService child = map.get("child") != null
                 ? buildFromMap((Map) map.get("child"))
                 : null;

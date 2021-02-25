@@ -6,6 +6,17 @@ import java.util.*;
 
 public abstract class AbstractRepository implements Repository {
 
+    protected String repositoryName = "";
+
+    public AbstractRepository(String prefix) {
+        this.repositoryName = prefix;
+    }
+
+    @Override
+    public String name() {
+        return repositoryName;
+    }
+
     Description firstOf(List<Description> list) throws NoImplementationFound {
         if (list == null || list.size() < 1) {
             return null;
@@ -41,5 +52,4 @@ public abstract class AbstractRepository implements Repository {
 
     public abstract Description implementationByName(String name) throws NoImplementationFound;
 
-    protected abstract Collection<Description> implementationsByType(String type);
 }

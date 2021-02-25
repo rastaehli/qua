@@ -22,7 +22,7 @@ public class BehaviorImpl implements Behavior {
         ANY_PROPERTIES.put("*","*");  // even when this map is copied/translated, these values signal ANY_PROPERTIES
     }
 
-    protected String type;  // name of the behavior of the service
+    protected String type;  // repositoryName of the behavior of the service
     protected Map<String, Object> properties;  // type variables (guaranteed by the builder)
 
     public BehaviorImpl(String type, Map<String, Object> properties) {
@@ -39,7 +39,7 @@ public class BehaviorImpl implements Behavior {
     }
 
     public BehaviorImpl setName(String n) {
-        properties.put("name",n);
+        properties.put("repositoryName",n);
         return this;
     }
 
@@ -65,7 +65,7 @@ public class BehaviorImpl implements Behavior {
     }
 
     public String name() {
-        return stringProperty("name");
+        return stringProperty("repositoryName");
     }
 
     @Override

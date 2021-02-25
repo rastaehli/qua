@@ -13,30 +13,22 @@ import static org.acm.rstaehli.qua.Behavior.UNKNOWN_TYPE;
 
 /**
  * Read a String from file.
- * Configure with <directory> for files, and logical repo name <prefix>.
+ * Configure with <directory> for files, and logical repo repositoryName <prefix>.
  * Use in-memory repository to cache implementations already read.
  */
-public class FileBasedStringRepository extends AbstractRepository {
+public class FileBasedStringRepository extends CachingRepository {
 
     private static final Logger logger = Logger.getLogger(FileBasedStringRepository.class);
     protected final Qua qua;
 
-    protected AbstractRepository cacheRepository;
     protected String fileDirectoryPath;
-    protected String repositoryName;  // prefix for names found in this repository
     protected String fileSuffix;  // file extension for names found in this repository
 
     public FileBasedStringRepository(String directory, String prefix, String suffix, Qua qua) {
-        super();
-        this.cacheRepository = new InMemoryRepository();
+        super(prefix);
         this.fileDirectoryPath = directory;
         this.fileSuffix = suffix;
-        this.repositoryName = prefix;
         this.qua = qua;
-    }
-
-    public void advertise(Description impl) {
-        cacheRepository.advertise(impl);  // should consider persisting in file??
     }
 
     public String stringFromFile(String name, String ... directoryPath) throws Exception {
@@ -70,7 +62,7 @@ public class FileBasedStringRepository extends AbstractRepository {
         try {
             return cacheRepository.implementationByName(fullName);
         } catch(NoImplementationFound e) {
-            logger.debug("no cached implementation for name: " + fullName);
+            logger.debug("no cached implementation for repositoryName: " + fullName);
         }
         // next look in file system
         String fileName = Name.keyPart(fullName, repositoryName);
@@ -86,11 +78,6 @@ public class FileBasedStringRepository extends AbstractRepository {
 
     private String resultType() {
         return "qua:String";
-    }
-
-    @Override
-    protected Collection<Description> implementationsByType(String type) {
-        return cacheRepository.implementationsByType(type);
     }
 
 }

@@ -1,9 +1,7 @@
 package org.acm.rstaehli.qua;
 
-import com.google.gson.Gson;
 import org.acm.rstaehli.qua.exceptions.NoImplementationFound;
 import org.apache.log4j.Logger;
-import sun.security.krb5.internal.crypto.Des;
 
 import java.util.*;
 
@@ -202,7 +200,7 @@ public class Description {
     }
 
     /**
-     * find implementations matching name or behavior and set these attributes.
+     * find implementations matching repositoryName or behavior and set these attributes.
      * on this description.
      * @param qua has implementation descriptions that may provide the needed plan.
      * @return this Description updated with construction plan.
@@ -396,17 +394,19 @@ public class Description {
     }
 
     public Description setDependencies(Map<String,Object> map) {
-        if (construction == null) {
-            construction = new ConstructionImpl(new Description());
-        }
+        requireConstructionBuilder();
         construction.setDependencies(map);
         return this;
     }
 
-    public Description setDependency(String key, Object value) {
-        if (construction == null) {
-            construction = new ConstructionImpl(new Description()); // leave builder unknown
+    private void requireConstructionBuilder() {
+        if (construction == null || construction.builderDescription() == null) {
+            throw new IllegalStateException("cannot set dependency before builder for construction.");
         }
+
+    }
+    public Description setDependency(String key, Object value) {
+        requireConstructionBuilder();
         construction.setDependency(key, value);
         computeStatus();
         return this;

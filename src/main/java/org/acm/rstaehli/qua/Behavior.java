@@ -27,8 +27,8 @@ public interface Behavior {
 
     public static final String UNKNOWN_TYPE = "UNKNOWN_TYPE";
 
-    Behavior setType(String name);  // name the type of behavior required of serviceObject
-    String type();  // the name for the behavior or UNKNOWN_TYPE
+    Behavior setType(String name);  // repositoryName the type of behavior required of serviceObject
+    String type();  // the repositoryName for the behavior or UNKNOWN_TYPE
     boolean isTyped(); // type is not UNKNOWN_TYPE
 
     Behavior setProperties(Map<String, Object> p);  // required properties of this serviceObject

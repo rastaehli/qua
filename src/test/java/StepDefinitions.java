@@ -16,7 +16,7 @@ public class StepDefinitions {
     Qua qua = new Qua();
     Construction plan1;
     Builder builder1;
-    Repository repo = new InMemoryRepository();
+    Repository repo = new InMemoryRepository("");
     Repository fileBasedRepo;
     Description goal;
     Description specialization;
@@ -72,7 +72,7 @@ public class StepDefinitions {
 
     @Given("qua has in memory repository")
     public void qua_has_in_memory_repository() {
-        repo = new InMemoryRepository();
+        repo = new InMemoryRepository("");
         qua.addRepository(repo);
     }
 
@@ -89,7 +89,7 @@ public class StepDefinitions {
             TestSvc svc = new TestSvc(
                     ((TestSvc)d.dependency("X")).name() +
                             ((TestSvc)d.dependency("Y")).name());
-            d.setInterface("name", svc);
+            d.setInterface("repositoryName", svc);
         }
         @Override
         public void start(Description impl) {
@@ -207,7 +207,7 @@ public class StepDefinitions {
         // planned but not provisioned.  Has at lease one dependency that is only typed.
         Description childService = qua.type("TestService");  // we know impl in repo, but not provisioned here yet
         Description planned = qua.type("Planned")
-                .setProperty("name", "Planned")
+                .setProperty("repositoryName", "Planned")
                 .setBuilder(testServiceBuilder)
                 .setDependency("child", childService);
         repo.advertise(planned);
@@ -218,7 +218,7 @@ public class StepDefinitions {
         // planned and all dependencies provisioned.
         Description childService = qua.type("TestService").provision(qua);
         Description planned = qua.type("Provisioned")
-                .setProperty("name", "Provisioned")
+                .setProperty("repositoryName", "Provisioned")
                 .setBuilder(testServiceBuilder)
                 .setDependency("child", childService);
         repo.advertise(planned);
@@ -228,7 +228,7 @@ public class StepDefinitions {
     public void assembled_impl_in_assembled_state() throws NoImplementationFound {
         Description childService = qua.type("TestService");
         Description planned = qua.type("Assembled")
-                .setProperty("name", "Assembled")
+                .setProperty("repositoryName", "Assembled")
                 .setBuilder(testServiceBuilder)
                 .setDependency("child", childService)
                 .assemble(qua);
@@ -247,7 +247,7 @@ public class StepDefinitions {
     public void active_impl_in_active_state() throws NoImplementationFound {
         Description childService = qua.type("TestService");
         Description planned = qua.type("Active")
-                .setProperty("name", "Active")
+                .setProperty("repositoryName", "Active")
                 .setBuilder(testServiceBuilder)
                 .setDependency("child", childService)
                 .activate(qua);
@@ -267,7 +267,7 @@ public class StepDefinitions {
     public void repository_with_planned_test_service_impl() {
         Description impl = qua.typeAndPlan("TestService", testServiceMapBuilder);
         Map<String,Object> map = new HashMap<>();
-        map.put("name","in-mem-testObject");
+        map.put("repositoryName","in-mem-testObject");
         impl.setProperty("map", map);
         repo.advertise(impl);
     }

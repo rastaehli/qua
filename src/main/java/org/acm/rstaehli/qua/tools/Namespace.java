@@ -13,10 +13,10 @@ import static org.acm.rstaehli.qua.BehaviorImpl.MATCH_ANY;
  *      "namespaces": {
  *          "build": "http://org.acm.rstaehli.qua/model/build/"
  *      }
- *    reference this namespace alias in a name:
- *      "name": "build:Sort"
- *    When the JSON qua document is read, the name should be translated to:
- *      "name": "http://org.acm.rstaehli.qua/model/build/Sort"
+ *    reference this namespace alias in a repositoryName:
+ *      "repositoryName": "build:Sort"
+ *    When the JSON qua document is read, the repositoryName should be translated to:
+ *      "repositoryName": "http://org.acm.rstaehli.qua/model/build/Sort"
  *
  * Use of namespaces avoids conflicts between a "Sort" defined by
  * different domains.

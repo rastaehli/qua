@@ -18,7 +18,7 @@ public class TestServiceMapBuilder extends AbstractPassiveServiceBuilder {
     }
 
     private TestService buildFromMap(Map map) {
-        String name = (String) map.get("name");
+        String name = (String) map.get("repositoryName");
         TestService child = map.get("child") != null
                 ? buildFromMap((Map) map.get("child"))
                 : null;
