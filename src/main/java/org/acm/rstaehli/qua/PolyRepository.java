@@ -58,12 +58,13 @@ public class PolyRepository extends CachingRepository {
             logger.debug("no cached implementation for repositoryName: " + fullName);
         }
         for (Repository repo: reposForName(fullName)) {
-            Description impl = repo.implementationByName(fullName);
-            if (impl != null) {
-                return impl;
+            try {
+                return repo.implementationByName(fullName);
+            } catch (NoImplementationFound noImplementationFound) {
+                // ignore until we've checked all repos
             }
         }
-        return null;
+        throw new NoImplementationFound("for name: " + fullName);
     }
 
     @Override

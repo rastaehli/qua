@@ -10,10 +10,16 @@ This description meta-object allows us to
 * provision, assemble, and activate a component, and
 * access that component as any other object or service of that type.
 
-The power of this model comes from a _repository_ of pre-existing component descriptions:
-* activated components provide pre-existing builders and basic services to bootstrap the construction of more complex components,
-* planned components advertise a way to assemble a component from dependencies (that may themselves need to be planned and assembled)
-
+The power of this model comes from a _repository_ of component descriptions:
+* activated descriptions advertise the availability of existing objects and services,
+* planned descriptions advertise a way to assemble a component from dependencies.
+Any service you can describe (type and required properties) can be built automatically
+if the repository has an implementation plan (a "planned description") for the type/properties and,
+recursively, implementation plans are found for all plan dependencies.  
+This does not happen by magic.  Implementation plans are developed and advertised in the repository
+to satisfy requirements just like in any engineering effort, but QuA allows the same simple description
+meta objects to be used at every level of construction, from simple runtime object 
+construction to distributed systems provisioning.
 
 ## Licence
 
