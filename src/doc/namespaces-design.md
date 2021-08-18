@@ -17,15 +17,18 @@ as a namespace prefix for the type "Builder" to avoid conflicts with how others
 have used the name.
 
 To make use of these long names easier, QuA also adopts the following techniques:
-- A fully qualified name is a string of the form <namespace>/<name>.  A fully
+- A fully qualified name is a string of the form \<namespace\>/\<name\>.  
+The namespace is a repository URI that may contain embedded "/" characters, 
+while the name is the part after the last "/" character.  
+A fully
 qualified name can be used in any context to refer to the object that <namespace>
 associates with <name>. 
 - The QuA object is used to define the context and can be constructed with
 aliases for commonly used namespaces.  When using this qua context object a
-name of the form <alias>:<name> will be automatically translated to the fully 
-qualified name <namespace>/<name> when a mapping <alias> to <namespace> is found.
+name of the form \<alias\>:\<name\> will be automatically translated to the fully 
+qualified name \<namespace\>/\<name\> when a mapping from \<alias\> to \<namespace\> is found.
 - A Repository defines its own namespace for the descriptions advertised in it.
-When a description with "name" property equal to <aName> is advertised in a 
-repository R with namespace <rNamespace> it may be retrieved from R by name <aName>
+When a description with "name" property equal to \<aName\> is advertised in a 
+repository R with namespace \<rNamespace\> it may be retrieved from R by name \<aName\>
 or from any repository (that can locate R by its namespace) by the fully qualified
-name <rNamespace>/<aName>.
+name \<rNamespace\>/\<aName\>.

@@ -1,4 +1,8 @@
 todo
+- explain: 
+    * pretty-print an implementation tree: 
+        * each node's type follow by child dependency nodes (and builder)
+    * build catches exceptions, shows error and context (plan/provision/build/activate for each goal in stack).  For example, "could not find implementation plan for TypeX, in repositories Y and Z, while provisioning plan for B, while provisioning plan for A."
 - justify "implementationByName".  
     * This supports distinct identity for alternate implementations of same type.
     For example, if one impl is for republicans, the other for democrats
