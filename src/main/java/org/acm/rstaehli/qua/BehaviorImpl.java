@@ -17,20 +17,31 @@ public class BehaviorImpl implements Behavior {
         ANY_PROPERTIES.put("*","*");  // even when this map is copied/translated, these values signal ANY_PROPERTIES
     }
 
-    protected String type;  // name of the behavior of the service
-    protected Map<String, Object> properties;  // type variables (guaranteed by the builder)
+    protected String type;  // QuA Name of the behavior of the service
+    protected String name;  // QuA Name of a particular instance
+    protected Map<String, Object> properties;  // object properties guaranteed by the builder
+//    protected Map<String, Object> metaProperties;  // meta object properties guaranteed by the builder
 
-    public BehaviorImpl(String type, Map<String, Object> properties) {
+    public BehaviorImpl(String type, String name, Map<String, Object> properties) {
         this.type = type;
+        this.name = name;
         this.properties = properties;
     }
 
+    public BehaviorImpl(String type, Map<String, Object> properties) {
+        this(type, null, properties);
+    }
+
     public BehaviorImpl() {
-        this(UNKNOWN_TYPE, null);
+        this(UNKNOWN_TYPE, null, null);
     }
 
     public BehaviorImpl(String type) {
-        this(type, null);
+        this(type, null, null);
+    }
+
+    public static BehaviorImpl named(String name) {
+        return new BehaviorImpl(null, name, null);
     }
 
     public BehaviorImpl setName(String n) {
@@ -134,8 +145,9 @@ public class BehaviorImpl implements Behavior {
             return null;
         }
         BehaviorImpl specialized = new BehaviorImpl().mergeBehavior(this);
-        if (specialized.properties.equals(ANY_PROPERTIES)) { // builder promises to match all properties
+        if (ANY_PROPERTIES.equals(specialized.properties)) { // builder promises to match all properties
             specialized.properties = goal.properties();  // so mergeBehavior the properties for the builder
+            logger.info("match by specializing: " + this.toString());
             return specialized;
         }
         // must have all goal properties
@@ -147,18 +159,31 @@ public class BehaviorImpl implements Behavior {
                 Object match = match(specialized.getProperty(name), goal.properties().get(name));
                 if (match == null) {
                     logger.debug("property " + name +
-                            " value: " + specialized.getProperty(name) +
-                            " does not match goal: " + goal.properties().get(name) + " for type: "+ type );
+                            " value: " + toString(specialized.getProperty(name)) +
+                            " does not match goal: " + goal.properties().get(name).toString() + " for type: "+ type );
                     return null;
                 }
                 specialized.properties.put(name, match); // match may be mutation that conforms to goal
             }
         }
         removeObsoleteWildcards(specialized.properties);  // unmatched MATCH_ANY values
+        logger.info("match by specializing: " + this.toString());
         return specialized;
     }
 
+    private String toString(Object o) {
+        if (o instanceof Description) {
+            Description d = (Description) o;
+            return d.toString();
+        } else {
+            return o.toString();
+        }
+    }
+
     private void removeObsoleteWildcards(Map<String, Object> map) {
+        if (map == null || map.isEmpty()) {
+            return;
+        }
         List<String> obsolete = new ArrayList();
         for (String key: map.keySet()) {
             if (map.get(key) == Behavior.MATCH_ANY) {
@@ -180,7 +205,7 @@ public class BehaviorImpl implements Behavior {
         if (value1 instanceof Number && value1.equals(value2)) {
             return value1;
         }
-        if (!(value1 instanceof BehaviorImpl)) {
+        if (!(value1 instanceof Description)) {
             return null;  // we don't support any other types for a property
         }
         Description propertyDescription = (Description)value1;

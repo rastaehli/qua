@@ -29,7 +29,7 @@ public class Description {
     protected Quality quality;
     protected Construction construction;
     private Map<String, Object> interfaces;
-    public static final String PRIMARY_SERVICE_NAME = "serviceObject"; // unique key for primary service interface
+    public static final String DEFAULT_NAME = "serviceObject"; // default key for primary service interface
 
 //    protected Description builderDescription = null; // service to build type from dependencies
 //    protected Map<String, Object> dependencies = new HashMap<>();  // services needed by the builder
@@ -49,10 +49,10 @@ public class Description {
             this.construction = new ConstructionImpl(builderDescription, dependencies);
         }
 
-        Object serviceObject = getField(jsonObject, PRIMARY_SERVICE_NAME);
+        Object serviceObject = getField(jsonObject, DEFAULT_NAME);
         this.interfaces = getField(jsonObject, "interfaces", new HashMap<>());
         if (serviceObject != null) {
-            interfaces.put(PRIMARY_SERVICE_NAME, serviceObject);
+            interfaces.put(DEFAULT_NAME, serviceObject);
         }
 
         computeStatus();
@@ -152,8 +152,8 @@ public class Description {
         return map;
     }
 
-    public Description setName(String n) {
-        this.behavior.setProperty("name",n);
+    public Description setName(String name) {
+        interfaces().put(name,service());
         return this;
     }
 
@@ -177,7 +177,14 @@ public class Description {
     }
 
     public String name() {
-        return stringProperty("name");
+        if (!interfaces.isEmpty()) {
+            for (String name: interfaces.keySet()) {
+                if (!name.equals(DEFAULT_NAME)) {
+                    return name;
+                }
+            }
+        }
+        return null;
     }
 
     public String type() {
@@ -215,14 +222,14 @@ public class Description {
 
     // assumes no repository needed, as in service already active
     public Object service() {
-        return getInterface(PRIMARY_SERVICE_NAME);
+        return getInterface(DEFAULT_NAME);
     }
 
     public Object service(Repository repo) throws NoImplementationFound {
         if (!isActive()) {
             this.activate(repo);
         }
-        return getInterface(PRIMARY_SERVICE_NAME);
+        return getInterface(DEFAULT_NAME);
     }
 
 
@@ -367,9 +374,27 @@ public class Description {
         }
         Description copy = new Description();
         copy.behavior = specializedBehavior;
-        copy.quality = this.quality;
-        copy.construction = this.construction;
+        if (quality != null) {
+            copy.quality = quality.copy();
+        }
+        if (construction != null) {
+            copy.construction = construction.copy();
+        }
+        if (interfaces != null) {
+            copy.interfaces = copy(interfaces);
+        }
         copy.computeStatus();   // may have changed from copied values
+        return copy;
+    }
+
+    private Map<String, Object> copy(Map<String, Object> original) {
+        if (original == null) {
+            return null;
+        }
+        Map<String, Object> copy = new HashMap<>();
+        for (String key: original.keySet()) {
+            copy.put(key, original.get(key));
+        }
         return copy;
     }
 
@@ -378,15 +403,14 @@ public class Description {
     }
 
     public Map<String, Object> interfaces() {
+        if (interfaces == null) {
+            interfaces = new HashMap();
+        }
         return this.interfaces;
     }
 
     public Object getInterface(String name) {
-        if (interfaces == null) {
-            interfaces = new HashMap();
-            return null;
-        }
-        return this.interfaces.get(name);
+        return interfaces().get(name);
     }
 
     public Description setInterface(String name, Object value) {
@@ -398,8 +422,39 @@ public class Description {
     }
 
     public Description setServiceObject(Object obj) {
-        setInterface(PRIMARY_SERVICE_NAME, obj);
+        setInterface(DEFAULT_NAME, obj);
         return this;
+    }
+
+    public String toString() {
+        if (name() != null) {
+            return "{ name: " + name() + " }";
+        } else {
+            return "{ type: " + type() + toString(properties()) + " }";
+        }
+    }
+
+    private String toString(Map<String,Object> props) {
+        if (props == null || props.isEmpty()) {
+            return "";
+        }
+        StringBuilder sb = new StringBuilder();
+        sb.append(" properties: {");
+        int initialLength = sb.length();
+        for (String key: props.keySet()) {
+            if (sb.length() > initialLength) {
+                sb.append(", ");
+            }
+            sb.append(key).append(": ");
+            Object value = props.get(key);
+            if (value instanceof Description) {
+                sb.append(((Description) value).toString());
+            } else {
+                sb.append(value.toString());
+            }
+        }
+        sb.append("}");
+        return sb.toString();
     }
 
 }

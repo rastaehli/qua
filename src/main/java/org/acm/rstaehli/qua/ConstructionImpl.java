@@ -7,8 +7,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.acm.rstaehli.qua.Lifecycle.*;
-
 public class ConstructionImpl implements Construction {
 
     private Description builderDescription;
@@ -102,6 +100,18 @@ public class ConstructionImpl implements Construction {
             descriptions.add(builderDescription);
         }
         return descriptions;
+    }
+
+    @Override
+    public Construction copy() {
+        if (dependencies == null) {
+            return new ConstructionImpl(builderDescription, null);
+        }
+        Map<String, Object> dependenciesCopy = new HashMap<>();
+        for (String key: dependencies.keySet()) {
+            dependenciesCopy.put(key, dependencies.get(key));
+        }
+        return new ConstructionImpl(builderDescription, dependenciesCopy);
     }
 
 }

@@ -28,4 +28,6 @@ public interface Quality {
     Quality setRequiredUtility(Float requiredUtility);  // goal aggregate quality for input error estimates.
     Float requiredUtility();
     boolean equals(Quality other);
+
+    Quality copy();
 }

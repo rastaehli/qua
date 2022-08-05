@@ -63,6 +63,16 @@ public class QualityImpl implements Quality {
         return true;
     }
 
+    @Override
+    public Quality copy() {
+        Quality copy = new QualityImpl();
+        copy.setAllowances(this.allowances);
+        copy.setErrorDimensions(this.errorDimensions);
+        copy.setUtility((this.utilityFunctions));
+        copy.setRequiredUtility(this.requiredUtility);
+        return copy;
+    }
+
     private boolean same(Object one, Object two) {
         if (one == null || two == null) {
             return false; //  must not be null when comparing

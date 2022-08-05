@@ -34,4 +34,6 @@ public interface Construction {
     boolean equals(Construction other);
     void mergeConstruction(Construction goal);
     List<Description> descriptions();
+
+    Construction copy();
 }

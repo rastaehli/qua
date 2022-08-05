@@ -1,7 +1,5 @@
 package org.acm.rstaehli.qua;
 
-import sun.security.krb5.internal.crypto.Des;
-
 import java.util.List;
 import java.util.Map;
 

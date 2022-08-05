@@ -13,6 +13,7 @@ public class InMemoryRepository extends AbstractRepository {
     private Map<String, List<Description>> nameMap;  // lookup by name
 
     public InMemoryRepository() {
+        super(new HashMap<>());
         typeMap = new HashMap<>();
         nameMap = new HashMap<>();
     }
@@ -67,8 +68,10 @@ public class InMemoryRepository extends AbstractRepository {
     protected Collection<Description> implementationsByType(String type) {
         List<Description> matches = typeMap.get(type);
         if (matches == null || matches.size() < 1) {
+            logger.info("no matches for type: " + type);
             return new ArrayList<>();
         }
+        logger.info("found " + matches.size() + " matches for type: " + type);
         return matches;
     }
 }
