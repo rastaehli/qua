@@ -54,7 +54,19 @@ public abstract class AbstractRepository implements Repository {
     }
     @Override
     public Description bestMatch(Description desc) throws NoImplementationFound {
-        return firstOf(implementationsMatching(desc));  // no other criteria for best
+        List<Description> matches = implementationsMatching(desc);
+        matches.sort(new UtilityComparator());
+        return firstOf(matches);  // no other criteria for best
+    }
+
+    class UtilityComparator implements Comparator<Description>
+    {
+        // Used for sorting in ascending order of
+        // roll number
+        public int compare(Description a, Description b)
+        {
+            return a.compare(b);
+        }
     }
 
     protected abstract Collection<Description> implementationsByName(String name);
@@ -74,8 +86,8 @@ public abstract class AbstractRepository implements Repository {
     @Override
     public Description namedService(String name, Object obj) {
         return new Description()
-                .setName(ns.translate(name))
                 .setServiceObject(obj)
+                .setName(ns.translate(name))
                 .computeStatus();
     }
 
@@ -89,24 +101,18 @@ public abstract class AbstractRepository implements Repository {
     }
 
     @Override
-    public Description namedOnly(String name) {
-        return new Description()
-                .setName(ns.translate(name))
-                .setType(UNKNOWN_TYPE)
-                .computeStatus();
-    }
-
-    @Override
     public Description typedPlan(String type, Map<String, Object> properties,
                                  Description builder, Map<String, Object> dependencies) {
         if (builder != null && dependencies == null) {
             dependencies = new HashMap<>();  // ensure builder and dependencies initialized together
         }
-        return new Description()
+        Description desc = new Description()
                 .setType(ns.translate(type))
-                .setProperties(ns.translate(properties))
-                .setConstruction(new ConstructionImpl(builder, ns.translate(dependencies)))
-                .computeStatus();
+                .setProperties(ns.translate(properties));
+        if (builder != null) {
+                desc.setPlan(new PlanImpl(builder, ns.translate(dependencies)));
+        }
+        return desc.computeStatus();
     }
 
     @Override
@@ -120,12 +126,12 @@ public abstract class AbstractRepository implements Repository {
     }
 
     @Override
-    public Description typeAndPlan(String type, Description builder, Map<String, Object> dependencies) {
+    public Description typedPlan(String type, Description builder, Map<String, Object> dependencies) {
         return typedPlan(type, new HashMap<>(), builder, dependencies);
     }
 
     @Override
-    public Description typeAndPlan(String type, Description builder) {
+    public Description typedPlan(String type, Description builder) {
         return typedPlan(type, new HashMap<>(), builder, new HashMap());
     }
 

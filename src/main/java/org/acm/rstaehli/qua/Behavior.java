@@ -50,4 +50,6 @@ public interface Behavior {
     boolean equals(Behavior other);
 
     List<Description> descriptions();  // Allow planning to access nested Description objects
+
+    String toString();
 }

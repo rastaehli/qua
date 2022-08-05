@@ -7,24 +7,24 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class ConstructionImpl implements Construction {
+public class PlanImpl implements Plan {
 
     private Description builderDescription;
     private Map<String, Object> dependencies;
 
-    public ConstructionImpl(Description builderDescription, Map<String, Object> dependencies) {
+    public PlanImpl(Description builderDescription, Map<String, Object> dependencies) {
         this.builderDescription = builderDescription;
         this.dependencies = dependencies;
     }
 
     @Override
-    public Construction setBuilder(Description builder) {
+    public Plan setBuilderDescription(Description builder) {
         this.builderDescription = builder;
         return this;
     }
 
     @Override
-    public Description builderDescription() {
+    public Description getBuilderDescription() {
         return builderDescription;
     }
 
@@ -37,13 +37,13 @@ public class ConstructionImpl implements Construction {
     }
 
     @Override
-    public Construction setDependencies(Map<String, Object> d) {
+    public Plan setDependencies(Map<String, Object> d) {
         this.dependencies = d;
         return this;
     }
 
     @Override
-    public Construction setDependency(String key, Object value) {
+    public Plan setDependency(String key, Object value) {
         if (dependencies == null) {
             dependencies = new HashMap<>();
         }
@@ -52,20 +52,20 @@ public class ConstructionImpl implements Construction {
     }
 
     @Override
-    public Map<String, Object> dependencies() {
+    public Map<String, Object> getDependencies() {
         return dependencies;
     }
 
     @Override
-    public boolean equals(Construction other) {
-        if (!(other instanceof ConstructionImpl)) {
+    public boolean equals(Plan other) {
+        if (!(other instanceof PlanImpl)) {
             return false;
         }
-        ConstructionImpl otherConstructionImpl = (ConstructionImpl)other;
+        PlanImpl otherConstructionImpl = (PlanImpl)other;
         if (!this.builderDescription.equals(otherConstructionImpl.builderDescription)) {
             return false;
         }
-        if (this.dependencies == null || ((ConstructionImpl) other).dependencies == null) {
+        if (this.dependencies == null || ((PlanImpl) other).dependencies == null) {
             return false;
         }
         if (!this.dependencies.equals(otherConstructionImpl.dependencies)) {
@@ -75,14 +75,15 @@ public class ConstructionImpl implements Construction {
     }
 
     @Override
-    public void mergeConstruction(Construction goal) {
-        if (this.builderDescription == null && goal.builderDescription() != null) {
-            this.builderDescription = goal.builderDescription();
+    public void mergePlan(Plan goal) {
+        if (this.builderDescription == null && goal.getBuilderDescription() != null) {
+            this.builderDescription = goal.getBuilderDescription();
         }
-        if (this.dependencies == null && goal.dependencies() != null) {
-            this.dependencies = goal.dependencies();
+        if (this.dependencies == null && goal.getDependencies() != null) {
+            this.dependencies = goal.getDependencies();
+        } else {
+            Mappings.merge(goal.getDependencies(), this.dependencies);
         }
-        Mappings.merge(goal.dependencies(), this.dependencies);
     }
 
 
@@ -103,15 +104,15 @@ public class ConstructionImpl implements Construction {
     }
 
     @Override
-    public Construction copy() {
+    public Plan copy() {
         if (dependencies == null) {
-            return new ConstructionImpl(builderDescription, null);
+            return new PlanImpl(builderDescription, null);
         }
         Map<String, Object> dependenciesCopy = new HashMap<>();
         for (String key: dependencies.keySet()) {
             dependenciesCopy.put(key, dependencies.get(key));
         }
-        return new ConstructionImpl(builderDescription, dependenciesCopy);
+        return new PlanImpl(builderDescription, dependenciesCopy);
     }
 
 }

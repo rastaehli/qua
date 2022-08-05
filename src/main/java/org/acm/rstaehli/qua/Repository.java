@@ -19,24 +19,22 @@ public interface Repository {
     // return one (or null) implementation best satisfying the described requirements
     Description bestMatch(Description desc) throws NoImplementationFound;
 
-    // ******* Creating Descriptions *********
+    /**
+     * Convenience Functions for Creating Descriptions using repository default namespace
+     */
 
-    // describe this object with only a name
     Description namedService(String name, Object obj);
-
-    //
-    Description namedOnly(String name);
-
-    Description typedPlan(String type, Map<String, Object> properties,
-                          Description builder, Map<String, Object> dependencies);
 
     Description type(String type);
 
     Description typeAndProperties(String type, Map<String, Object> properties);
 
-    Description typeAndPlan(String type, Description builder, Map<String, Object> dependencies);
+    Description typedPlan(String type, Description builder);
 
-    Description typeAndPlan(String type, Description builder);
+    Description typedPlan(String type, Description builder, Map<String, Object> dependencies);
+
+    Description typedPlan(String type, Map<String, Object> properties,
+                          Description builder, Map<String, Object> dependencies);
 
     Description typedService(String typeName, Object impl);
 }

@@ -6,8 +6,8 @@ import java.util.Map;
 public class QualityImpl implements Quality {
 
     public List<String> errorDimensions;
-    public Map<String, Object> allowances;
-    public Map<String, Object> utilityFunctions;
+    public Map<String, Object> weights;
+    public Map<String, Object> estimateFunctions;
     public Float requiredUtility;
 
     @Override
@@ -17,15 +17,25 @@ public class QualityImpl implements Quality {
     }
 
     @Override
-    public Quality setAllowances(Map<String, Object> allowances) {
-        this.allowances = allowances;
+    public Quality setWeights(Map<String, Object> weights) {
+        this.weights = weights;
         return this;
     }
 
     @Override
-    public Quality setUtility(Map<String, Object> utilityFunctions) {
-        this.utilityFunctions = utilityFunctions;
+    public Map<String, Object> getWeights() {
+        return weights;
+    }
+
+    @Override
+    public Quality setEstimateFunctions(Map<String, Object> estimateFunctions) {
+        this.estimateFunctions = estimateFunctions;
         return this;
+    }
+
+    @Override
+    public Map<String, Object> getEstimateFunctions() {
+        return estimateFunctions;
     }
 
     @Override
@@ -35,12 +45,23 @@ public class QualityImpl implements Quality {
     }
 
     @Override
-    public Float requiredUtility() {
+    public Float getRequiredUtility() {
         return requiredUtility;
     }
 
     @Override
     public boolean equals(Quality other) {
+        if (this == other) {
+            return true;
+        }
+        return errorDimensions.equals(other.getErrorDimensions())
+                && weights.equals(other.getWeights())
+                && estimateFunctions.equals(other.getEstimateFunctions())
+                && requiredUtility.equals(other.getRequiredUtility());
+    }
+
+    @Override
+    public boolean comparable(Quality other) {
         if (this == other) {
             return true;
         }
@@ -51,13 +72,10 @@ public class QualityImpl implements Quality {
         if (!same(this.errorDimensions, otherQualityImpl.errorDimensions))  {
             return false;
         }
-        if (!same(this.allowances, otherQualityImpl.allowances))  {
+        if (!same(this.weights, otherQualityImpl.weights))  {
             return false;
         }
-        if (!same(this.utilityFunctions, otherQualityImpl.utilityFunctions))  {
-            return false;
-        }
-        if (!same(this.requiredUtility, otherQualityImpl.requiredUtility))  {
+        if (!same(this.estimateFunctions, otherQualityImpl.estimateFunctions))  {
             return false;
         }
         return true;
@@ -66,11 +84,28 @@ public class QualityImpl implements Quality {
     @Override
     public Quality copy() {
         Quality copy = new QualityImpl();
-        copy.setAllowances(this.allowances);
+        copy.setWeights(this.weights);
         copy.setErrorDimensions(this.errorDimensions);
-        copy.setUtility((this.utilityFunctions));
+        copy.setEstimateFunctions((this.estimateFunctions));
         copy.setRequiredUtility(this.requiredUtility);
         return copy;
+    }
+
+    @Override
+    public List<String> getErrorDimensions() {
+        return errorDimensions;
+    }
+
+    @Override
+    public Double utility(Description impl) {
+        // exponential decay function (Math.E raised to negative weighted magnitude of error vector)
+        // give utility 1.0 for perfect quality, and decays to zero as error increases.
+        double weightedErrorSquareSum = 0.0;
+        for (String key: estimateFunctions.keySet()) {
+            EstimateFunction f = (EstimateFunction) estimateFunctions.get(key);
+            weightedErrorSquareSum += Math.pow(f.estimate(impl), 2);  // square the estimate
+        }
+        return Math.pow(Math.E, - Math.sqrt(weightedErrorSquareSum)) ;
     }
 
     private boolean same(Object one, Object two) {

@@ -2,7 +2,6 @@ package org.acm.rstaehli.qua.tools;
 
 import org.acm.rstaehli.qua.Builder;
 import org.acm.rstaehli.qua.Description;
-import org.acm.rstaehli.qua.Plan;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;

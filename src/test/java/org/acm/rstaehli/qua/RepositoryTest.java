@@ -160,11 +160,13 @@ public class RepositoryTest {
                 Arrays.asList("StringProperty", "IntProperty", "DescriptionProperty"),
                 Arrays.asList("stringProp", 123, repo.type("propertyType")));
         Description desc = repo.typeAndProperties(testType, props1);
+        desc.setServiceObject(0); // set to anything, just so it's an implementation we can advertise
         repo.advertise(desc);
         Map<String, Object> props2 = mapProps(
                 Arrays.asList("StringProperty", "IntProperty", "DescriptionProperty"),
                 Arrays.asList("stringProp2", 2, repo.type("propertyType2")));
         desc = repo.typeAndProperties(testType, props2);
+        desc.setServiceObject(0); // set to anything, just so it's an implementation we can advertise
         repo.advertise(desc);
 
     }
@@ -176,31 +178,117 @@ public class RepositoryTest {
         return map;
     }
 
-    public void testImplementationByName() {
+    @Test
+    public void testImplementationByName() throws NoImplementationFound {
+        Description testDesc = repo.namedService("testName", "obj1");
+        repo.advertise(testDesc);
+        testDesc = repo.namedService("testName2", "obj2");
+        repo.advertise(testDesc);
+        Description resultDesc = repo.implementationByName("testName");
+        assertTrue(resultDesc != null);
+        assertTrue(resultDesc.isActive());
+        assertTrue(resultDesc.service().equals("obj1"));
     }
 
-    public void testBestMatch() {
+    @Test
+    public void testBestMatch_noQualitySpec() throws NoImplementationFound {
+        String testType = "testType";
+        Description testDesc = repo.typedService(testType, "obj1");
+        repo.advertise(testDesc);
+        testDesc = repo.typedService(testType, "obj2");
+        repo.advertise(testDesc);
+        Description resultDesc = repo.bestMatch(repo.type(testType));
+        assertTrue(resultDesc != null);
+        assertTrue(resultDesc.isActive());
+        assertTrue(resultDesc.service().equals("obj2"));
     }
 
+    @Test
+    public void testBestMatch_withQualitySpec() throws NoImplementationFound {
+        String testType = "testType";
+        Description testDesc = repo.typedService(testType, "obj1");
+        testDesc.setQuality(new MockQuality(0.1));
+        repo.advertise(testDesc);
+        testDesc = repo.typedService(testType, "obj3");
+        testDesc.setQuality(new MockQuality(0.99)); // this is the best match based on utility
+        repo.advertise(testDesc);
+        testDesc = repo.typedService(testType, "obj2");
+        testDesc.setQuality(new MockQuality(0.6));
+        repo.advertise(testDesc);
+        Description resultDesc = repo.bestMatch(repo.type(testType));
+        assertTrue(resultDesc != null);
+        assertTrue(resultDesc.isActive());
+        assertTrue(resultDesc.service().equals("obj3"));
+    }
+
+    @Test
     public void testNamedService() {
+        Description desc = repo.namedService("bozo", 1);
+        assertTrue(desc.name().equals("bozo"));
+        assertTrue(desc.isActive());
+        assertTrue(desc.service().equals(1));
     }
 
-    public void testNamedOnly() {
+    @Test
+    public void testTypedPlan() throws NoImplementationFound {
+        String type = "aType";
+        Map<String,Object> properties = new HashMap<>();
+        properties.put("p1", "value1");
+        properties.put("p2", "value2");
+        Description builder = repo.namedService("concatenator", new Concatenator());
+
+        Description desc = repo.typedPlan(type, properties, builder, properties);
+
+        assertTrue(!desc.isActive());  // no active yet
+        assertTrue(desc.isPlanned());
+        desc.activate();  // but can be activated to get service
+        assertTrue(desc.service().equals("value1value2"));
     }
 
-    public void testTypedPlan() {
-    }
-
+    @Test
     public void testType() {
+        Description desc = repo.type("bozo");
+        assertTrue(desc.type().equals("bozo"));
+        assertTrue(desc.name() == null);
+        assertTrue(desc.isTyped());
+        assertTrue(!desc.isPlanned());
+        assertTrue(desc.service() == null);
     }
 
+    @Test
     public void testTypeAndProperties() {
+        Map<String, Object> props = new HashMap<>();
+        props.put("a", "aValue");
+        props.put("b", "bValue");
+        Description desc = repo.typeAndProperties("bozo", props);
+        assertTrue(desc.type().equals("bozo"));
+        assertTrue(desc.properties().equals(props));
+        assertTrue(desc.isTyped());
+        assertTrue(!desc.isPlanned());
+        assertTrue(desc.service() == null);
     }
 
+    @Test
     public void testTypeAndPlan() {
+        Description plan = repo.type("testBuilder");
+        Description desc = repo.typedPlan("bozo", plan);
+        assertTrue(desc.type().equals("bozo"));
+        assertTrue(desc.isTyped());
+        assertTrue(desc.isPlanned());
+        assertTrue(desc.service() == null);
     }
 
-    public void testTestTypeAndPlan() {
+    @Test
+    public void testTestTypeAndPlan_withDependencies() {
+        Description plan = repo.type("testBuilder");
+        Map<String, Object> dependencies = new HashMap<>();
+        dependencies.put("first",repo.type("depencencyType1"));
+        dependencies.put("second",repo.type("depencencyType2"));
+        Description desc = repo.typedPlan("bozo", plan, dependencies);
+        assertTrue(desc.type().equals("bozo"));
+        assertTrue(desc.isTyped());
+        assertTrue(desc.isPlanned());
+        assertTrue(desc.service() == null);
     }
 
     @Test
@@ -229,86 +317,73 @@ public class RepositoryTest {
         public void recycle(Description impl) {
         }
     }
-    @Test
-    public void test_typedPlan() throws NoImplementationFound {
-        String type = "aType";
-        Map<String,Object> properties = new HashMap<>();
-        properties.put("p1", "value1");
-        properties.put("p2", "value2");
-        Description builder = repo.namedService("concatenator", new Concatenator());
 
-        Description desc = repo.typedPlan(type, properties, builder, properties);
+    class MockQuality implements Quality {
 
-        assertTrue(!desc.isActive());  // no active yet
-        assertTrue(desc.isPlanned());
-        desc.activate();  // but can be activated to get service
-        assertTrue(desc.service().equals("value1value2"));
+        public Double utility;
+
+        public MockQuality(Double mockUtility) {
+            utility = mockUtility;
+        }
+        @Override
+        public Quality setErrorDimensions(List<String> errorDimensions) {
+            return null;
+        }
+
+        @Override
+        public List<String> getErrorDimensions() {
+            return null;
+        }
+
+        @Override
+        public Quality setWeights(Map<String, Object> allowances) {
+            return null;
+        }
+
+        @Override
+        public Map<String, Object> getWeights() {
+            return null;
+        }
+
+        @Override
+        public Quality setEstimateFunctions(Map<String, Object> estimateFunctions) {
+            return null;
+        }
+
+        @Override
+        public Map<String, Object> getEstimateFunctions() {
+            return null;
+        }
+
+        @Override
+        public Quality setRequiredUtility(Float requiredUtility) {
+            return null;
+        }
+
+        @Override
+        public Float getRequiredUtility() {
+            return null;
+        }
+
+        @Override
+        public boolean equals(Quality other) {
+            return other.comparable(this) && ((MockQuality)other).utility == this.utility;
+        }
+
+        @Override
+        public Quality copy() {
+            return new MockQuality(utility);
+        }
+
+        @Override
+        public Double utility(Description impl) {
+            return utility;
+        }
+
+        @Override
+        public boolean comparable(Quality other) {
+            return other instanceof MockQuality;
+        }
     }
-//    public void test_json_minimalPlan() throws NoImplementationFound {
-//        description = describer.lookupByName("minimalPlan");
-//        assertTrue(description.isPlanned());
-//    }
-//
-//    @Test
-//    public void test_json_planWithDependencies() throws NoImplementationFound {
-//        description = describer.lookupByName("planWithDependencies");
-//        assertTrue(description.isTyped());
-//        assertTrue(description.dependencies().size() > 1);
-//    }
-//
-//    @Test
-//    public void test_json_extendedProperties() throws NoImplementationFound {
-//        desc.advertise(description.lookupByName("namedDescription"));  // parent for extendedProperties
-//        description = describer.lookupByName("extendedProperties");
-//        assertTrue(description.isTyped());
-//        assertTrue(description.properties().get("newProperty1").equals("value1"));
-//        assertTrue((Double)(description.properties().get("numberProp")) == 1.3 );
-//    }
-//
-//    @Test
-//    public void test_json_multiLevelInheritance() throws NoImplementationFound {
-//        desc.advertise(description.lookupByName("namedDescription"));  // parent for extendedProperties
-//        desc.advertise(description.lookupByName("extendedProperties")); // parent for multilevelInheritance
-//        description = describer.lookupByName("multiLevelInheritance");
-//        assertTrue(description.isTyped());
-//        assertTrue(description.properties().get("newProperty2").equals("value2"));
-//        assertTrue(description.properties().get("newProperty1").equals("value99"));  // child overrode value
-//        assertTrue((Double)(description.properties().get("numberProp")) == 1.3 );
-//    }
-//
-//    @Test(expected = NoImplementationFound.class)
-//    public void test_plan_noImplementation() throws NoImplementationFound {
-//        description = describer.lookupByName("noImplementation");
-//        assertTrue(description.isTyped());
-//        desc.plan(repo);
-//    }
-//
-//    @Test
-//    public void test_namespaces() throws Exception {
-//        description = describer.lookupByName("namespace1AliasNs1");
-//        assertTrue(description.type().equals("namespace1exampleType"));
-//    }
-//
-//    @Test
-//    public void test_json_arrayProperties() throws Exception {
-//        description = describer.lookupByName("arrayProperties");
-//        assertTrue(description.isTyped());
-//        Object o = describer.properties().get("listOfStrings");
-//        assertTrue(o instanceof List);
-//        List<String> strings = (List<String>)o;
-//        assertTrue(strings.size() == 2);
-//        assertTrue(strings.get(0).equals("one"));
-//    }
-//
-//    @Test
-//    public void test_json_multiParentInheritance() throws Exception {
-//        description = describer.lookupByName("multiParentInheritance");
-//        assertTrue(description.isTyped());
-//        assertTrue(description.type().equals("qua:exampleType"));
-//        assertTrue(description.properties().get("childProperty2").equals("value2"));
-//        assertTrue(description.properties().get("childProperty1").equals("value99"));
-//        assertTrue(description.properties().get("stringProp").equals("value"));
-//        assertTrue(description.properties().get("descriptionProp") instanceof Description);
-//    }
 
 }

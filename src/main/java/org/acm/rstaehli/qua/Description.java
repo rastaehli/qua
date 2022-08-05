@@ -18,8 +18,9 @@ import static org.acm.rstaehli.qua.Lifecycle.*;
  *      match plan dependency names?
  * - plan: how to build an implementation of the service.
  *
- * A service conforms to this description only if the type matches and it hasMatchingValue all the listed properties.
- * When a service is built, it can be accessed by its "service" property.
+ * A service conforms to this description only if the type matches
+ * and hasMatchingValue is true for all the listed properties.
+ * When a service is built, it can be accessed by calling service().
  */
 public class Description {
 
@@ -27,16 +28,11 @@ public class Description {
 
     protected Behavior behavior;
     protected Quality quality;
-    protected Construction construction;
+    protected Plan plan;
     private Map<String, Object> interfaces;
     public static final String DEFAULT_NAME = "serviceObject"; // default key for primary service interface
 
-//    protected Description builderDescription = null; // service to build type from dependencies
-//    protected Map<String, Object> dependencies = new HashMap<>();  // services needed by the builder
-//    protected Object serviceObject;  // the primary object interface of this description
-//    protected Map<String, String> interfaces;  // repository names of all interfaces
     protected Lifecycle status = UNKNOWN;
-
 
     public Description(Map<String, Object> jsonObject) {
         String type = getField(jsonObject, "type", UNKNOWN_TYPE);
@@ -46,7 +42,7 @@ public class Description {
         Description builderDescription = getField(jsonObject, "builderDescription");
         Map<String, Object> dependencies = getField(jsonObject, "dependencies", new HashMap<>());
         if (builderDescription != null || !dependencies.isEmpty()) {
-            this.construction = new ConstructionImpl(builderDescription, dependencies);
+            this.plan = new PlanImpl(builderDescription, dependencies);
         }
 
         Object serviceObject = getField(jsonObject, DEFAULT_NAME);
@@ -60,7 +56,7 @@ public class Description {
 
     public Description() {
         this.behavior = new BehaviorImpl();
-        this.construction = null;
+        this.plan = null;
     }
 
     public Description computeStatus() {
@@ -68,7 +64,7 @@ public class Description {
             status = ACTIVE;  // construction sets primary service only when active/ready
             return this;
         }
-        if (interfaces != null && !interfaces.isEmpty()) {
+        if (interfaces != null && interfaces.values().stream().anyMatch(e -> e != null)) {
             status = ASSEMBLED;  // built and interfaces identified
             return this;  // don't care if typed or planned
         }
@@ -81,9 +77,9 @@ public class Description {
             status = TYPED;  // still need to check construction status
         }
 
-        if (construction != null) {
+        if (plan != null) {
             status = PROVISIONED;  // default value if no dependencies
-            for (Description d: construction.descriptions()) {
+            for (Description d: plan.descriptions()) {
                 if (!d.isProvisioned()) {
                     status = PLANNED;   // construction plan exists but need some dependency
                 }
@@ -153,12 +149,16 @@ public class Description {
     }
 
     public Description setName(String name) {
+        if (service() == null) {
+            throw new IllegalStateException("can't name an inactive service.");
+        }
         interfaces().put(name,service());
         return this;
     }
 
     public Description setType(String t) {
         this.behavior.setType(t);
+        computeStatus();
         return this;
     }
 
@@ -215,8 +215,8 @@ public class Description {
         return (List<Description>)properties().get(key);
     }
 
-    public Description setConstruction(Construction c) {
-        construction = c;
+    public Description setPlan(Plan c) {
+        plan = c;
         return this;
     }
 
@@ -279,7 +279,7 @@ public class Description {
         }
 
         behavior.mergeBehavior(impl.behavior);
-        construction.mergeConstruction(impl.construction);
+        plan.mergePlan(impl.plan);
         if (interfaces == null) {
             interfaces = impl.interfaces;
         } else {
@@ -320,7 +320,7 @@ public class Description {
 
     private List<Description> childDescriptions() {
         List<Description> descriptions = behavior.descriptions();
-        descriptions.addAll(construction.descriptions());
+        descriptions.addAll(plan.descriptions());
         return descriptions;
     }
 
@@ -340,7 +340,7 @@ public class Description {
                 d.assemble();
             }
         }
-        construction.builder().assemble(this);
+        plan.builder().assemble(this);
         status = ASSEMBLED;
         return this;
     }
@@ -356,7 +356,7 @@ public class Description {
         if (!isAssembled()) {
             return assemble(repo);
         }
-        construction.builder().start(this);
+        plan.builder().start(this);
         status = ACTIVE;
         return this;
     }
@@ -377,8 +377,8 @@ public class Description {
         if (quality != null) {
             copy.quality = quality.copy();
         }
-        if (construction != null) {
-            copy.construction = construction.copy();
+        if (plan != null) {
+            copy.plan = plan.copy();
         }
         if (interfaces != null) {
             copy.interfaces = copy(interfaces);
@@ -399,7 +399,7 @@ public class Description {
     }
 
     public Map<String, Object> dependencies() {
-        return construction.dependencies();
+        return plan.getDependencies();
     }
 
     public Map<String, Object> interfaces() {
@@ -418,11 +418,13 @@ public class Description {
             interfaces = new HashMap();
         }
         this.interfaces.put(name, value);
+        computeStatus();
         return this;
     }
 
     public Description setServiceObject(Object obj) {
         setInterface(DEFAULT_NAME, obj);
+        computeStatus();
         return this;
     }
 
@@ -430,31 +432,37 @@ public class Description {
         if (name() != null) {
             return "{ name: " + name() + " }";
         } else {
-            return "{ type: " + type() + toString(properties()) + " }";
+            return behavior().toString();
         }
     }
 
-    private String toString(Map<String,Object> props) {
-        if (props == null || props.isEmpty()) {
-            return "";
+    /**
+     * return -1 if this should sort before the  other
+     *      0 if unable to compare
+     *      1 if other should sort before
+     *
+     * @param that
+     * @return
+     */
+    public int compare(Description that) {
+        if (that.quality == null) {
+            // b's quality unknown, assume the worst
+            return -1;
         }
-        StringBuilder sb = new StringBuilder();
-        sb.append(" properties: {");
-        int initialLength = sb.length();
-        for (String key: props.keySet()) {
-            if (sb.length() > initialLength) {
-                sb.append(", ");
-            }
-            sb.append(key).append(": ");
-            Object value = props.get(key);
-            if (value instanceof Description) {
-                sb.append(((Description) value).toString());
-            } else {
-                sb.append(value.toString());
-            }
+        if (quality == null) {
+            // quality is unknown, assume the worst
+            return 1;
         }
-        sb.append("}");
-        return sb.toString();
+        if (!quality.comparable(that.quality)) {
+            return 0;  //  no way to say which is better
+        }
+        if ( quality.utility(this) > that.quality.utility(that)) {
+            return -1; // this is more useful (better quality) than that
+        }
+        return 1;
     }
 
+    public void setQuality(Quality q) {
+        quality = q;
+    }
 }

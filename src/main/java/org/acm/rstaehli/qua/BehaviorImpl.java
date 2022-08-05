@@ -70,10 +70,6 @@ public class BehaviorImpl implements Behavior {
         return this;
     }
 
-    public String name() {
-        return stringProperty("name");
-    }
-
     @Override
     public String type() {
         return type;
@@ -243,6 +239,34 @@ public class BehaviorImpl implements Behavior {
             }
         }
         return descriptions;
+    }
+
+
+    public String toString() {
+        return "{ type: " + type() + toString(properties()) + " }";
+    }
+
+    private String toString(Map<String,Object> props) {
+        if (props == null || props.isEmpty()) {
+            return "";
+        }
+        StringBuilder sb = new StringBuilder();
+        sb.append(" properties: {");
+        int initialLength = sb.length();
+        for (String key: props.keySet()) {
+            if (sb.length() > initialLength) {
+                sb.append(", ");
+            }
+            sb.append(key).append(": ");
+            Object value = props.get(key);
+            if (value instanceof Description) {
+                sb.append(((Description) value).toString());
+            } else {
+                sb.append(value.toString());
+            }
+        }
+        sb.append("}");
+        return sb.toString();
     }
 
 }

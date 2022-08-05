@@ -23,11 +23,25 @@ import java.util.Map;
 public interface Quality {
 
     Quality setErrorDimensions(List<String> errorDimensions);  // dimensions for deviation from ideal
-    Quality setAllowances(Map<String, Object> allowances);  // acceptable error values for each dimension
-    Quality setUtility(Map<String, Object> utilityFunctions);  // utility function for each dimension
+
+    List<String> getErrorDimensions();
+
+    Quality setWeights(Map<String, Object> allowances);  // acceptable error values for each dimension
+
+    Map<String, Object> getWeights();
+
+    Quality setEstimateFunctions(Map<String, Object> estimateFunctions);
+
+    Map<String, Object> getEstimateFunctions();
+
     Quality setRequiredUtility(Float requiredUtility);  // goal aggregate quality for input error estimates.
-    Float requiredUtility();
+
+    Float getRequiredUtility();
     boolean equals(Quality other);
 
     Quality copy();
+
+    Double utility(Description impl);
+
+    boolean comparable(Quality other);
 }
