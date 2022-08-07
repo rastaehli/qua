@@ -28,7 +28,7 @@ public class Description {
 
     protected Behavior behavior;
     protected Quality quality;
-    protected Plan plan;
+    protected ImplementationPlan plan;
     private Map<String, Object> interfaces;
     public static final String DEFAULT_NAME = "serviceObject"; // default key for primary service interface
 
@@ -148,33 +148,9 @@ public class Description {
         return map;
     }
 
-    public Description setName(String name) {
-        if (service() == null) {
-            throw new IllegalStateException("can't name an inactive service.");
-        }
-        interfaces().put(name,service());
-        return this;
-    }
-
-    public Description setType(String t) {
-        this.behavior.setType(t);
-        computeStatus();
-        return this;
-    }
-
-    public Behavior behavior() {
-        return this.behavior;
-    }
-
-    public Description setProperties(Map<String, Object> p) {
-        this.behavior.setProperties(p);
-        return this;
-    }
-
-    public Description setProperty(String key, Object value) {
-        this.behavior.setProperty(key, value);
-        return this;
-    }
+    /**
+     * Getter, Setter and other property access methods **************************************
+     */
 
     public String name() {
         if (!interfaces.isEmpty()) {
@@ -187,36 +163,73 @@ public class Description {
         return null;
     }
 
+    public Description setName(String name) {
+        if (service() == null) {
+            throw new IllegalStateException("can't name an inactive service.");
+        }
+        interfaces().put(name,service());
+        return this;
+    }
+
     public String type() {
         return this.behavior.type();
     }
 
+    public Description setType(String t) {
+        this.behavior.setType(t);
+        computeStatus();
+        return this;
+    }
+
+    public Behavior getBehavior() {
+        return this.behavior;
+    }
+
+    public Description setBehavior(Behavior b) {
+        behavior = b;
+        return this;
+    }
+
     public Map<String, Object> properties() {
-        return this.behavior.properties();
+        return this.getBehavior().properties();
     }
 
     public boolean hasProperty(String key) {
-        return this.behavior.hasProperty(key);
+        return this.getBehavior().hasProperty(key);
     }
 
     public String stringProperty(String key) {
-        return (String)properties().get(key);
+        return (String)getBehavior().properties().get(key);
     }
 
     public long longProperty(String key) {
-        return (long)properties().get(key);
+        return (long)getBehavior().properties().get(key);
     }
 
     public double doubleProperty(String key) {
-        return (double)properties().get(key);
+        return (double)getBehavior().properties().get(key);
     }
 
     public List<Description> listDescriptionProperty(String key) {
-        return (List<Description>)properties().get(key);
+        return (List<Description>)getBehavior().properties().get(key);
     }
 
-    public Description setPlan(Plan c) {
-        plan = c;
+    public Description setProperties(Map<String, Object> p) {
+        this.getBehavior().setProperties(p);
+        return this;
+    }
+
+    public Description setProperty(String key, Object value) {
+        this.getBehavior().setProperty(key, value);
+        return this;
+    }
+
+    public ImplementationPlan getPlan() {
+        return plan;
+    }
+
+    public Description setPlan(ImplementationPlan p) {
+        plan = p;
         return this;
     }
 
@@ -232,8 +245,49 @@ public class Description {
         return getInterface(DEFAULT_NAME);
     }
 
+    public Description setServiceObject(Object obj) {
+        setInterface(DEFAULT_NAME, obj);
+        computeStatus();
+        return this;
+    }
 
-    // queries about implementation status
+    public Map<String, Object> dependencies() {
+        return plan.getDependencies();
+    }
+
+    public Map<String, Object> interfaces() {
+        if (interfaces == null) {
+            interfaces = new HashMap();
+        }
+        return this.interfaces;
+    }
+
+    public Object getInterface(String name) {
+        return interfaces().get(name);
+    }
+
+    public Description setInterface(String name, Object value) {
+        if (interfaces == null) {
+            interfaces = new HashMap();
+        }
+        this.interfaces.put(name, value);
+        computeStatus();
+        return this;
+    }
+
+    public Quality getQuality(Quality q) {
+        return quality;
+    }
+
+    public Description setQuality(Quality q) {
+        quality = q;
+        return this;
+    }
+
+
+    /**
+     * queries about implementation status ******************************
+     */
 
     public boolean isTyped() {
         return status.ordinal() >= TYPED.ordinal();
@@ -255,7 +309,13 @@ public class Description {
         return status.ordinal() >= ACTIVE.ordinal();
     }
 
-    // operations to change implementation status
+    /**
+     * operations to change implementation status
+     * Note these operations allow the caller to specify a repository
+     * when implementation may require discovery of implementation plans.
+     * The versions without the repository arguement are provided for the cases where
+     * the caller knows it is not needed.
+      */
 
     public Description plan() throws NoImplementationFound {
         return plan(null);
@@ -279,7 +339,7 @@ public class Description {
         }
 
         behavior.mergeBehavior(impl.behavior);
-        plan.mergePlan(impl.plan);
+        plan = impl.getPlan().copy();
         if (interfaces == null) {
             interfaces = impl.interfaces;
         } else {
@@ -316,12 +376,6 @@ public class Description {
         };
         status = PROVISIONED;
         return this;
-    }
-
-    private List<Description> childDescriptions() {
-        List<Description> descriptions = behavior.descriptions();
-        descriptions.addAll(plan.descriptions());
-        return descriptions;
     }
 
     public Description assemble() throws NoImplementationFound {
@@ -361,14 +415,24 @@ public class Description {
         return this;
     }
 
+    private List<Description> childDescriptions() {
+        List<Description> descriptions = behavior.descriptions();
+        descriptions.addAll(plan.descriptions());
+        return descriptions;
+    }
+
     /**
-     * Attempt to create a copy of this specialized to match the goal.
+     * operations to copy or derive a similar Description **********************
+     */
+
+    /**
+     * Attempt to create a copy of this Description, specialized to match the goal.
      *
      * @param goal describes behavior iwe are trying to match
      * @return null or a specialized copy matching goal
      */
     public Description matchFor(Description goal) {
-        Behavior specializedBehavior = this.behavior.specializeFor(goal.behavior());
+        Behavior specializedBehavior = this.behavior.specializeFor(goal.getBehavior());
         if (specializedBehavior == null) {
             return null;
         }
@@ -398,41 +462,11 @@ public class Description {
         return copy;
     }
 
-    public Map<String, Object> dependencies() {
-        return plan.getDependencies();
-    }
-
-    public Map<String, Object> interfaces() {
-        if (interfaces == null) {
-            interfaces = new HashMap();
-        }
-        return this.interfaces;
-    }
-
-    public Object getInterface(String name) {
-        return interfaces().get(name);
-    }
-
-    public Description setInterface(String name, Object value) {
-        if (interfaces == null) {
-            interfaces = new HashMap();
-        }
-        this.interfaces.put(name, value);
-        computeStatus();
-        return this;
-    }
-
-    public Description setServiceObject(Object obj) {
-        setInterface(DEFAULT_NAME, obj);
-        computeStatus();
-        return this;
-    }
-
     public String toString() {
         if (name() != null) {
             return "{ name: " + name() + " }";
         } else {
-            return behavior().toString();
+            return getBehavior().toString();
         }
     }
 
@@ -462,7 +496,5 @@ public class Description {
         return 1;
     }
 
-    public void setQuality(Quality q) {
-        quality = q;
-    }
+
 }

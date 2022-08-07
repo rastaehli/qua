@@ -23,17 +23,17 @@ import java.util.Map;
  * All access to the service is via
  * the @Interfaces description.
  */
-public interface Plan {
+public interface ImplementationPlan {
 
-    Plan setBuilderDescription(Description builder);
+    ImplementationPlan setBuilderDescription(Description builder);
     Description getBuilderDescription();
     Builder builder() throws NoImplementationFound; // capability to access builder
-    Plan setDependencies(Map<String, Object> d);  // required dependencies
-    Plan setDependency(String key, Object value);  // set a dependency value or Description
+    ImplementationPlan setDependencies(Map<String, Object> d);  // required dependencies
+    ImplementationPlan setDependency(String key, Object value);  // set a dependency value or Description
     Map<String, Object> getDependencies();  // null or required dependencies
-    boolean equals(Plan other);
-    void mergePlan(Plan goal);
+    boolean equals(ImplementationPlan other);
+    void mergePlan(ImplementationPlan goal);
     List<Description> descriptions();
 
-    Plan copy();
+    ImplementationPlan copy();
 }

@@ -7,7 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class PlanImpl implements Plan {
+public class PlanImpl implements ImplementationPlan {
 
     private Description builderDescription;
     private Map<String, Object> dependencies;
@@ -18,7 +18,7 @@ public class PlanImpl implements Plan {
     }
 
     @Override
-    public Plan setBuilderDescription(Description builder) {
+    public ImplementationPlan setBuilderDescription(Description builder) {
         this.builderDescription = builder;
         return this;
     }
@@ -37,13 +37,13 @@ public class PlanImpl implements Plan {
     }
 
     @Override
-    public Plan setDependencies(Map<String, Object> d) {
+    public ImplementationPlan setDependencies(Map<String, Object> d) {
         this.dependencies = d;
         return this;
     }
 
     @Override
-    public Plan setDependency(String key, Object value) {
+    public ImplementationPlan setDependency(String key, Object value) {
         if (dependencies == null) {
             dependencies = new HashMap<>();
         }
@@ -57,7 +57,7 @@ public class PlanImpl implements Plan {
     }
 
     @Override
-    public boolean equals(Plan other) {
+    public boolean equals(ImplementationPlan other) {
         if (!(other instanceof PlanImpl)) {
             return false;
         }
@@ -75,7 +75,7 @@ public class PlanImpl implements Plan {
     }
 
     @Override
-    public void mergePlan(Plan goal) {
+    public void mergePlan(ImplementationPlan goal) {
         if (this.builderDescription == null && goal.getBuilderDescription() != null) {
             this.builderDescription = goal.getBuilderDescription();
         }
@@ -104,7 +104,7 @@ public class PlanImpl implements Plan {
     }
 
     @Override
-    public Plan copy() {
+    public ImplementationPlan copy() {
         if (dependencies == null) {
             return new PlanImpl(builderDescription, null);
         }
